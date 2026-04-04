@@ -1,0 +1,16 @@
+{
+  "name": "ai-briefing",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/js-yaml": "^4.0.9"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "js-yaml": "^4.1.1"
+  }
+}

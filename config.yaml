@@ -1,0 +1,43 @@
+tavily:
+  queries:
+    - "AI news today"
+    - "LLM release announcement"
+    - "AI policy regulation"
+  max_results_per_query: 10
+
+hackernews:
+  keywords: ["AI", "LLM", "GPT", "Claude", "machine learning", "neural", "transformer", "diffusion", "foundation model", "open source model"]
+  min_points: 20
+  max_stories: 20
+
+rss:
+  feeds:
+    - url: https://arstechnica.com/ai/feed/
+      name: Ars Technica
+    - url: https://www.theverge.com/ai-artificial-intelligence/rss/index.xml
+      name: The Verge
+    - url: https://www.technologyreview.com/feed/
+      name: MIT Tech Review
+    - url: https://blog.google/technology/ai/rss/
+      name: Google AI Blog
+    - url: https://openai.com/blog/rss.xml
+      name: OpenAI Blog
+    - url: https://www.anthropic.com/blog/rss.xml
+      name: Anthropic Blog
+    - url: https://huggingface.co/blog/feed.xml
+      name: Hugging Face
+    - url: https://simonwillison.net/atom/everything/
+      name: Simon Willison
+
+ollama:
+  model: "llama3"
+  base_url: "http://localhost:11434"
+
+output:
+  path: "~/Obsidian/lgl/AI/News"
+  categories:
+    - "Models & Releases"
+    - "Policy & Safety"
+    - "Industry"
+    - "Open Source & Tools"
+    - "Research"
