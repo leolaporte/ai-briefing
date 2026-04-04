@@ -26,6 +26,7 @@ export interface RssFeed {
 
 export interface RssConfig {
   feeds: RssFeed[];
+  opml_file?: string;
 }
 
 export interface OllamaConfig {

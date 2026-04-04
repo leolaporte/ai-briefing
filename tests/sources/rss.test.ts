@@ -1,5 +1,5 @@
 import { describe, test, expect } from "bun:test";
-import { parseRssXml } from "../../src/sources/rss";
+import { parseRssXml, parseOpml } from "../../src/sources/rss";
 
 const sampleRss = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0">
@@ -58,5 +58,27 @@ describe("parseRssXml", () => {
   test("returns empty array for invalid XML", () => {
     const stories = parseRssXml("not xml", "Bad Feed", 48);
     expect(stories).toHaveLength(0);
+  });
+});
+
+describe("parseOpml", () => {
+  test("extracts feeds from OPML XML", () => {
+    const opml = `<opml version="2.0"><head><title>Test</title></head><body>
+      <outline text="404 Media" type="rss" xmlUrl="https://www.404media.co/rss/"/>
+      <outline text="Ars Technica" type="rss" xmlUrl="https://arstechnica.com/feed/" htmlUrl="https://arstechnica.com/"/>
+      <outline text="No URL" type="rss"/>
+    </body></opml>`;
+
+    const feeds = parseOpml(opml);
+    expect(feeds).toHaveLength(2);
+    expect(feeds[0].name).toBe("404 Media");
+    expect(feeds[0].url).toBe("https://www.404media.co/rss/");
+    expect(feeds[1].name).toBe("Ars Technica");
+    expect(feeds[1].url).toBe("https://arstechnica.com/feed/");
+  });
+
+  test("returns empty array for empty OPML", () => {
+    const feeds = parseOpml("<opml><body></body></opml>");
+    expect(feeds).toHaveLength(0);
   });
 });

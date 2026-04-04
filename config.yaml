@@ -11,23 +11,14 @@ hackernews:
   max_stories: 20
 
 rss:
+  opml_file: "~/Sync/beatcheck.opml"
   feeds:
-    - url: https://arstechnica.com/ai/feed/
-      name: Ars Technica
-    - url: https://www.theverge.com/rss/index.xml
-      name: The Verge
-    - url: https://www.technologyreview.com/feed/
-      name: MIT Tech Review
     - url: https://blog.google/technology/ai/rss/
       name: Google AI Blog
     - url: https://openai.com/blog/rss.xml
       name: OpenAI Blog
-    - url: https://www.anthropic.com/rss/index.xml
-      name: Anthropic Blog
     - url: https://huggingface.co/blog/feed.xml
       name: Hugging Face
-    - url: https://simonwillison.net/atom/everything/
-      name: Simon Willison
 
 ollama:
   model: "qwen3:8b"

@@ -1,4 +1,5 @@
-import type { Story, RssConfig } from "../types";
+import { readFileSync, existsSync } from "fs";
+import type { Story, RssConfig, RssFeed } from "../types";
 
 function extractTag(xml: string, tag: string): string {
   const attrMatch = xml.match(new RegExp(`<${tag}[^>]*href="([^"]*)"`, "i"));
@@ -46,11 +47,59 @@ export function parseRssXml(xml: string, feedName: string, maxAgeHours: number):
   }
 }
 
+export function parseOpml(xml: string): RssFeed[] {
+  const feeds: RssFeed[] = [];
+  const outlineRegex = /<outline[^>]*>/gi;
+  let match;
+
+  while ((match = outlineRegex.exec(xml)) !== null) {
+    const tag = match[0];
+    const xmlUrlMatch = tag.match(/xmlUrl="([^"]*)"/i);
+    if (!xmlUrlMatch) continue;
+
+    const url = xmlUrlMatch[1];
+    const textMatch = tag.match(/text="([^"]*)"/i);
+    const name = textMatch?.[1] || url;
+
+    feeds.push({ url, name });
+  }
+
+  return feeds;
+}
+
+function loadFeeds(config: RssConfig): RssFeed[] {
+  const feeds = [...config.feeds];
+
+  if (config.opml_file) {
+    const opmlPath = config.opml_file.startsWith("~")
+      ? config.opml_file.replace("~", process.env.HOME ?? "/home/leo")
+      : config.opml_file;
+
+    if (existsSync(opmlPath)) {
+      const opmlXml = readFileSync(opmlPath, "utf-8");
+      const opmlFeeds = parseOpml(opmlXml);
+      console.log(`[rss] loaded ${opmlFeeds.length} feeds from OPML: ${opmlPath}`);
+      feeds.push(...opmlFeeds);
+    } else {
+      console.error(`[rss] OPML file not found: ${opmlPath}`);
+    }
+  }
+
+  // Dedupe by URL
+  const seen = new Set<string>();
+  return feeds.filter((f) => {
+    if (seen.has(f.url)) return false;
+    seen.add(f.url);
+    return true;
+  });
+}
+
 export async function fetchRss(config: RssConfig): Promise<Story[]> {
+  const allFeeds = loadFeeds(config);
   const allStories: Story[] = [];
 
   const results = await Promise.allSettled(
-    config.feeds.map(async (feed) => {
+    allFeeds.map(async (feed) => {
       try {
         const res = await fetch(feed.url);
         if (!res.ok) {
