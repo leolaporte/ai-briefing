@@ -10,17 +10,31 @@ export interface ShowScore {
 }
 export type ClusterScoring = Record<Show, ShowScore>;
 
+const EMPTY_SHOW_SCORE: ShowScore = { score: 0, canonical_idx: 1, section_guess: null };
+
 export function parseScoringResponse(text: string): ClusterScoring {
   const start = text.indexOf("{");
   const end = text.lastIndexOf("}");
   if (start === -1 || end === -1) throw new Error("No JSON object in response");
   const obj = JSON.parse(text.slice(start, end + 1));
+
+  const out: Partial<ClusterScoring> = {};
+  let validCount = 0;
   for (const s of ["twit", "mbw", "im"] as Show[]) {
-    if (!obj[s] || typeof obj[s].score !== "number" || typeof obj[s].canonical_idx !== "number") {
-      throw new Error(`Scoring response missing required field for show ${s}`);
+    const v = obj[s];
+    if (v && typeof v.score === "number" && typeof v.canonical_idx === "number") {
+      out[s] = {
+        score: v.score,
+        canonical_idx: v.canonical_idx,
+        section_guess: typeof v.section_guess === "string" ? v.section_guess : null,
+      };
+      validCount++;
+    } else {
+      out[s] = { ...EMPTY_SHOW_SCORE };
     }
   }
-  return obj as ClusterScoring;
+  if (validCount === 0) throw new Error("Scoring response had no valid show fields");
+  return out as ClusterScoring;
 }
 
 export async function scoreCluster(

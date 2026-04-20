@@ -19,4 +19,17 @@ describe("parseScoringResponse", () => {
   test("throws on unparseable response", () => {
     expect(() => parseScoringResponse("nonsense")).toThrow();
   });
+
+  test("defaults missing shows to zero-score rather than throwing", () => {
+    const raw = `{"twit":{"score":0.8,"canonical_idx":1,"section_guess":"AI"}}`;
+    const parsed = parseScoringResponse(raw);
+    expect(parsed.twit.score).toBeCloseTo(0.8);
+    expect(parsed.mbw.score).toBe(0);
+    expect(parsed.im.score).toBe(0);
+    expect(parsed.im.section_guess).toBeNull();
+  });
+
+  test("throws only when ALL shows are missing/invalid", () => {
+    expect(() => parseScoringResponse(`{"other":{"score":0.5}}`)).toThrow(/no valid show fields/);
+  });
 });
