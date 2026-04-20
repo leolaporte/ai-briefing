@@ -1,17 +1,22 @@
+// src/config.ts
 import { readFileSync } from "fs";
 import { resolve, dirname } from "path";
 import yaml from "js-yaml";
 import type { Config } from "./types";
 
+function expandTilde(s: string): string {
+  if (s.startsWith("~")) return s.replace("~", process.env.HOME ?? "/home/leo");
+  return s;
+}
+
 export function loadConfig(configPath?: string): Config {
   const path = configPath ?? resolve(dirname(import.meta.dir), "config.yaml");
   const raw = readFileSync(path, "utf-8");
   const config = yaml.load(raw) as Config;
-
-  // Resolve ~ to home directory
-  if (config.output.path.startsWith("~")) {
-    config.output.path = config.output.path.replace("~", process.env.HOME ?? "/home/leo");
-  }
-
+  config.output.path = expandTilde(config.output.path);
+  config.storage.archive_db = expandTilde(config.storage.archive_db);
+  config.storage.labels_db = expandTilde(config.storage.labels_db);
+  config.archive.root = expandTilde(config.archive.root);
+  if (config.rss.opml_file) config.rss.opml_file = expandTilde(config.rss.opml_file);
   return config;
 }

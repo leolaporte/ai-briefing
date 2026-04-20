@@ -1,53 +1,44 @@
+// src/types.ts
 export interface Story {
   title: string;
   url: string;
-  source: "tavily" | "hackernews" | "rss";
+  source: "rss";
   sourceName: string;
   summary: string;
   publishedAt: Date;
   score?: number;
 }
 
-export interface TavilyConfig {
-  queries: string[];
-  max_results_per_query: number;
-}
-
-export interface HackernewsConfig {
-  keywords: string[];
-  min_points: number;
-  max_stories: number;
-}
-
-export interface RssFeed {
-  url: string;
-  name: string;
-}
-
-export interface RssConfig {
-  feeds: RssFeed[];
-  opml_file?: string;
-}
+export interface RssFeed { url: string; name: string; }
+export interface RssConfig { feeds: RssFeed[]; opml_file?: string; }
 
 export interface ClaudeConfig {
   model: string;
   max_tokens: number;
+  few_shot_k: number;
 }
 
-export interface OutputConfig {
-  path: string;
-  categories: string[];
+export interface PipelineConfig {
+  window_hours: number;
+  cluster_threshold: number;
+  top_n_per_show: number;
+  other_threshold: number;
 }
+
+export interface StorageConfig {
+  archive_db: string;
+  labels_db: string;
+}
+
+export interface ArchiveConfig { root: string; }
+
+export interface OutputConfig { path: string; }
 
 export interface Config {
-  tavily: TavilyConfig;
-  hackernews: HackernewsConfig;
   rss: RssConfig;
   claude: ClaudeConfig;
+  pipeline: PipelineConfig;
+  storage: StorageConfig;
+  archive: ArchiveConfig;
   output: OutputConfig;
-}
-
-export interface SummarizedBriefing {
-  topStories: Array<{ title: string; take: string; source: string; url: string }>;
-  categories: Record<string, Array<{ title: string; summary: string; source: string; url: string }>>;
 }

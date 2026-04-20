@@ -1,34 +1,26 @@
-tavily:
-  queries:
-    - "AI news today"
-    - "LLM release announcement"
-    - "AI policy regulation"
-  max_results_per_query: 10
-
-hackernews:
-  keywords: ["AI", "LLM", "GPT", "Claude", "machine learning", "neural", "transformer", "diffusion", "foundation model", "open source model"]
-  min_points: 20
-  max_stories: 20
-
 rss:
   opml_file: "~/Sync/beatcheck.opml"
-  feeds:
-    - url: https://blog.google/technology/ai/rss/
-      name: Google AI Blog
-    - url: https://openai.com/blog/rss.xml
-      name: OpenAI Blog
-    - url: https://huggingface.co/blog/feed.xml
-      name: Hugging Face
+  feeds: []
 
 claude:
   model: "claude-haiku-4-5"
   max_tokens: 4096
+  few_shot_k: 20
+
+pipeline:
+  window_hours: 24
+  cluster_threshold: 0.5
+  top_n_per_show: 15
+  other_threshold: 0.3
+
+storage:
+  archive_db: "~/.local/share/ai-briefing/archive.db"
+  labels_db: "~/.local/share/ai-briefing/labels.db"
+
+archive:
+  # Root directory containing archive-twit/ archive-mbw/ archive-im/ folders of
+  # final show rundowns (.html, .org, and -LINKS.csv files).
+  root: "~/Documents"
 
 output:
   path: "~/Obsidian/lgl/AI/News"
-  categories:
-    - "Models & Releases"
-    - "Policy & Safety"
-    - "Industry"
-    - "Open Source & Tools"
-    - "Research"
