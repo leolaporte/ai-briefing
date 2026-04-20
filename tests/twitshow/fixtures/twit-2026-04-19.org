@@ -1,0 +1,286 @@
+#+TITLE: This Week in Tech Briefing Book
+#+DATE: Sun, 19 April 2026
+
+* Google
+
+** Google Broke Its Promise to Me. Now ICE Has My Data. | Electronic Frontier Foundation
+
+*** URL
+https://www.eff.org/deeplinks/2026/04/google-broke-its-promise-me-now-ice-has-my-data
+
+*** Date
+2026-04-14T16:01:48+00:00
+
+*** Summary
+"Google has received and responded to legal process from a law enforcement authority compelling the release of information related to your Google Account." -- Google (email to Amandla Thomas-Johnson)
+
+Google handed over the data of Ph.D. student and former reporter Amandla Thomas-Johnson to Immigration and Customs Enforcement (ICE) without notifying him, breaking a nearly decade-long promise to warn users before sharing their information with law enforcement.
+
+Thomas-Johnson, a dual British and Trinidad and Tobago citizen on a student visa, attended a brief pro-Palestinian protest at Cornell University in September 2024, after which he fled to Canada and then Switzerland. In April 2025, ICE issued an administrative subpoena to Google for his data, and Google complied without giving him notice or an opportunity to challenge the request—despite Google's stated policy of notifying users before handing over data to law enforcement. The Electronic Frontier Foundation has filed complaints with California and New York Attorneys General, arguing that Google engaged in deceptive trade practices by breaking its promise. This case illustrates how technology companies' massive data stores, combined with government power, can enable surveillance of protected speech and create a chilling effect on free expression.
+
+** IPv6 Usage Reaches Historic 50% Across Google Services
+
+*** URL
+https://tech.slashdot.org/story/26/04/16/1718230/ipv6-usage-reaches-historic-50-across-google-services?utm_source=rss1.0mainlinkanon&utm_medium=feed
+
+*** Date
+2026-04-19T03:18:30.536Z
+
+*** Summary
+IPv6 usage briefly reached 50% across Google services for the first time on March 28, 2026, marking a historic milestone for the internet protocol created in 1998.
+
+This achievement is significant because IPv6 was designed to solve the address shortage problem of IPv4, which offers only about 3.7 billion usable addresses. IPv4 address exhaustion became critical starting in 2011 when IANA ran out of addresses for North America, followed by Europe in 2019 and other regions shortly after. While IPv6 adoption has faced resistance since its creation, with adoption now at 43% globally according to APNIC and 40% of traffic according to Cloudflare, reaching 50% usage on a major service provider demonstrates the protocol is finally gaining the traction necessary to sustain the modern internet's growth.
+
+* Meta
+
+** Meta Must Face Youth Addiction Lawsuit by Massachusetts, Court Rules
+
+*** URL
+https://pxlnv.com/linklog/meta-massachusetts-lawsuit/
+
+*** Date
+2026-04-17T03:00:31+00:00
+
+*** Summary
+"Section 230 only applies to claims seeking to hold Meta liable for the harms springing directly from user-generated content they post. Meta's design decisions, by contrast, are its own responsibility." -- Electronic Privacy Information Center
+
+Massachusetts' highest court ruled Friday that Meta must face a lawsuit from the state's attorney general alleging the company designed Instagram to addict children, rejecting Meta's Section 230 immunity defense.
+
+The ruling distinguishes between user-generated content — which Section 230 protects platforms from liability for — and a company's own product design decisions, which are not shielded. This decision has significant implications for how Section 230 is interpreted going forward. Legal experts are concerned the ruling represents another erosion of Section 230 protections, with one lawyer warning of the "swiss cheese-ification" of the law as more workarounds proliferate, potentially undermining its structural integrity if the trend continues.
+
+** Exclusive: Meta targets May 20 for first wave of layoffs; additional cuts later in 2026
+
+*** URL
+https://www.reuters.com/world/meta-targets-may-20-first-wave-layoffs-additional-cuts-later-2026-2026-04-17/
+
+*** Date
+2026-04-19T16:51:15.382Z
+
+*** Summary
+Meta's ‌layoffs this ⁠year will be the social media giant's most significant since a restructuring in late 2022 and early 2023 that it dubbed the "year of efficiency."
+
+
+
+* Roblox
+
+** Roblox agrees to a $12 million settlement with Nevada
+
+*** URL
+https://www.engadget.com/gaming/roblox-agrees-to-a-12-million-settlement-with-nevada-142842421.html?src=rss
+
+*** Date
+2026-04-17T14:28:42+00:00
+
+*** Summary
+"this settlement will create a safer environment for our children online, and I hope that it will serve as a bellwether for how online interactive platforms allow our state's youth to use their products." -- Nevada Attorney General Aaron Ford
+
+Roblox has agreed to a $12 million settlement with Nevada to avoid trial, while committing to enhanced safety protections for minors including age verification systems and restricted messaging between children and adults.
+
+The settlement addresses concerns that the gaming platform has not adequately protected children from exploitation. As part of the agreement, Roblox will donate $10 million to children's support programs over three years and spend $2.5 million on law enforcement liaison positions and online safety awareness campaigns. The company will implement rigorous safety protocols including facial age estimation technology combined with government-issued ID verification, restrict under-16 users from messaging adults unless they are "trusted friends," and expand parental controls to users up to age 16. Despite this settlement, Roblox continues to face more than 100 pending lawsuits from other states including Kentucky, Iowa, Louisiana, and Texas regarding claims of facilitating child sexual exploitation.
+
+* AI Development
+
+** Musk v. Altman Is a Battle for OpenAI’s Soul
+
+*** URL
+https://www.wired.com/story/musk-v-altman-trial-openai-xai/
+
+*** Date
+2026-04-16T18:00:00+00:00
+
+*** Summary
+"It's definitely important that OpenAI lives up to its mission. I think we're still seeing a lot of things that OpenAI is doing that, in my view, aren't really consistent with its mission." -- Jacob Hilton, former OpenAI employee
+
+Elon Musk's lawsuit against OpenAI cofounders Sam Altman and Greg Brockman is heading to trial this month in Oakland, California, where a jury will decide whether the AI company has abandoned its founding mission to ensure artificial general intelligence benefits humanity.
+
+The case centers on whether OpenAI breached its charitable trust by shifting from a nonprofit open-source model to a secretive for-profit operation that generates billions in revenue. The stakes are particularly high because a ruling against OpenAI could impact its planned IPO later this year and influence how the world's leading AI developer controls and distributes its technology. While Musk's status as a competitor who could benefit from an unfavorable ruling for OpenAI raises questions about his motives, former OpenAI employees and AI safety nonprofits have filed briefs supporting the case, arguing it's important to hold the company accountable to its founding principles of safety and benefiting humanity.
+
+** Stanford’s AI Index finds China has nearly closed the performance gap with the US despite spending 23 times less
+
+*** URL
+https://thenextweb.com/news/stanford-ai-index-2026-china-us-performance-gap
+
+*** Date
+2026-04-19T16:39:05.677Z
+
+*** Summary
+"likely understates" -- Stanford's 2026 AI Index Report (regarding China's actual AI spending)
+
+Stanford University's 2026 AI Index Report finds that China has nearly closed the performance gap with the US to just 2.7%, despite spending 23 times less on private AI investment.
+
+The report documents a striking shift in global AI competition, with China's best models now nearly matching American performance while the US spends $285.9 billion versus China's $12.4 billion in private investment. This development raises fundamental questions about the relationship between spending and technological leadership, particularly as China leads in AI patents (69.7% of global filings), publications (23.2% of global output), and industrial robot installations (9 times the US rate), while AI talent migration to the US has dropped 89% since 2017. The data suggests China may have found alternative pathways to compete effectively in frontier AI development, challenging assumptions about American technological dominance.
+
+** You’re About to See a Lot of Critical Software Updates. Don’t Ignore Them.
+
+*** URL
+https://www.wsj.com/tech/personal-tech/anthropic-mythos-security-software-updates-573cc9b3?mod=rss_Technology
+
+*** Date
+2026-04-19T16:41:43.205Z
+
+*** Summary
+Anthropic’s newest, as-yet-unreleased AI model is a hacker’s dream, so here’s
+the cybersecurity advice you need to start taking seriously right now.
+
+
+
+** New Movie Trailer Shows First AI-Generated Performance By a Major Star: the Late Val Kilmer
+
+*** URL
+https://entertainment.slashdot.org/story/26/04/18/2010257/new-movie-trailer-shows-first-ai-generated-performance-by-a-major-star-the-late-val-kilmer?utm_source=rss1.0mainlinkanon&utm_medium=feed
+
+*** Date
+2026-04-19T16:48:10.106Z
+
+*** Summary
+"Kilmer deeply wanted to be in the movie, but was too sick to do so. His family endorses and supports his inclusion." -- Writer-director Coerte Voorhees
+
+A movie trailer has been released for "As Deep As the Grave," featuring the first authorized AI-generated performance of a deceased major Hollywood star, the late Val Kilmer, who was cast in the film before his death in April 2025 but never shot any scenes.
+
+The film used generative AI technology developed by UK-based company Sonantic to create both Kilmer's voice and a deepfake of his likeness, with his estate and daughter collaborating on the project. While the filmmakers claim they followed SAG-AFTRA guidelines and compensated Kilmer's estate, the trailer has generated significant controversy, with online commenters calling it "terrifying," "disgusting," and "disrespectful," raising broader concerns about the precedent this use of AI could set for the film industry as a whole.
+
+* Robotics
+
+** Humanoid robots race past humans in Beijing half-marathon, showing rapid advances
+
+*** URL
+https://www.reuters.com/sports/humanoid-robots-race-past-humans-beijing-half-marathon-showing-rapid-advances-2026-04-19/
+
+*** Date
+2026-04-19T16:50:27.607Z
+
+*** Summary
+The Chinese-made robots whizzed past ​human runners, highlighting the sector's rapid advances after last year's inaugural edition was riddled with ‌mishaps and robots that were unable to finish.
+
+
+
+* Open Source
+
+** FSF to OnlyOffice: You Can't Use the GNU (A)GPL to Take Software Freedom Away
+
+*** URL
+https://news.slashdot.org/story/26/04/18/0417208/fsf-to-onlyoffice-you-cant-use-the-gnu-agpl-to-take-software-freedom-away?utm_source=rss1.0mainlinkanon&utm_medium=feed
+
+*** Date
+2026-04-19T16:48:46.863Z
+
+*** Summary
+"It is possible to modify the (A)GPLv3 with additional terms, but only by adhering to the terms of the license... The (A)GPLv3 makes it clear that it permits all licensees to remove any additional terms that are 'further restrictions' under the (A)GPLv3." -- Krzysztof Siewicz, FSF licensing/compliance manager
+
+The Free Software Foundation has sided against OnlyOffice in a licensing dispute, ruling that the company cannot impose additional restrictions on software licensed under the GNU Affero General Public License (AGPLv3) to prevent forks like Euro-Office from removing attribution requirements.
+
+OnlyOffice suspended its partnership with Nextcloud after the company forked OnlyOffice to create Euro-Office and removed OnlyOffice's brand attribution as required by the AGPL license. The FSF's intervention clarifies that while authors can add extra terms to the AGPLv3, those terms cannot restrict freedoms already granted by the license—and licensees retain the right to remove any such "further restrictions." The ruling establishes an important precedent about what additional protections are permissible under free and open-source software licensing.
+
+* Privacy & Security
+
+** Man with @ihackedthegovernment Instagram account tells judge, “I made a mistake"
+
+*** URL
+https://arstechnica.com/tech-policy/2026/04/man-with-ihackedthegovernment-instagram-account-tells-judge-i-made-a-mistake/
+
+*** Date
+2026-04-17T19:31:48+00:00
+
+*** Summary
+"I made a mistake. I am truly sorry. I respect laws, and I want to be a good citizen." -- Nicholas Moore
+
+A 25-year-old Tennessee man who hacked into U.S. government systems using stolen credentials and publicly posted victims' personal information on an Instagram account named @ihackedthegovernment was sentenced to one year of probation.
+
+Nicholas Moore accessed the Supreme Court's electronic filing system at least 25 times, along with AmeriCorps and Veterans Administration Health System accounts, then bragged about the breaches by posting screenshots of users' private information on social media between August and October 2023. The government did not seek jail time, arguing that Moore is "a vulnerable young man with long-term disabilities" who appeared unlikely to reoffend and seemed motivated by a desire to "show off to online acquaintances" rather than commit financial crimes. The case highlights how unauthorized government system access can expose sensitive personal and medical information of innocent citizens, including a Marine Corps veteran.
+
+** Judge sides with creators of banned ICE trackers who allege DHS and DOJ violated their First Amendment rights
+
+*** URL
+https://www.engadget.com/apps/judge-sides-with-creators-of-banned-ice-trackers-who-allege-dhs-and-doj-violated-their-first-amendment-rights-191701801.html
+
+*** Date
+2026-04-18T19:17:01+00:00
+
+*** Summary
+"Even though it's not the end of the case, it bodes well for the future of our legal fight to ensure that the First Amendment protects the right to discuss, record, and criticize what law enforcement does in public." -- Foundation for Individual Rights and Expression (FIRE)
+
+A federal judge has granted a preliminary injunction protecting the creators of ICE-monitoring apps and Facebook groups from Trump administration pressure to remove their projects from digital platforms.
+
+Judge Jorge L. Alonso ruled that the plaintiffs Kassandra Rosado and Kreisau Group are likely to succeed in their First Amendment case against the government for coercing Apple and Facebook into taking down the Eyes Up app and ICE Sightings - Chicagoland Facebook group. The ruling is significant because it addresses whether the government can suppress protected speech by pressuring private platforms to remove content, with the judge characterizing social media posts by former officials demanding the removals as "thinly veiled threats." Similar apps including ICEBlock and Red Dot were also removed following Trump administration demands.
+
+** Opsec oopsie: Dutch navy frigate location outed by mailing it a Bluetooth tracker
+
+*** URL
+https://go.theregister.com/feed/www.theregister.com/2026/04/17/dutch_navy_frigate_tracked/
+
+*** Date
+2026-04-19T03:43:41.555Z
+
+*** Summary
+"Nowadays, you can eliminate targets remotely and with great precision, but you do need to know where they are. So, as a frigate, you never want to reveal your location to other people." -- Retired Dutch Lieutenant General Mart de Kruif
+
+Dutch journalists successfully tracked a Dutch navy frigate by mailing a concealed Bluetooth tracker to the ship, exploiting publicly available information about how to send mail to military personnel.
+
+The incident, reported by Omroep Gelderland, exposed a critical operational security vulnerability in the Dutch Ministry of Defence's mail system. A €5 tracker concealed in a postcard was able to transmit the location of HNLMS Evertsen as it departed from Crete and sailed toward Cyprus before being discovered and disabled during mail sorting. The breach highlights how modern technology has transformed seemingly innocuous military procedures—like posting public instructions for sending mail to troops—into significant security risks, prompting the Ministry to ban greeting cards containing batteries and review its mail guidelines.
+
+* Space Exploration
+
+** NASA Shuts Off Instrument on Voyager 1 to Keep Spacecraft Operating
+
+*** URL
+https://science.nasa.gov/blogs/voyager/2026/04/17/nasa-shuts-off-instrument-on-voyager-1-to-keep-spacecraft-operating/
+
+*** Date
+2026-04-17T20:46:56+00:00
+
+*** Summary
+Summary not available
+
+** The Little Probe That Could: Why Voyager 1 Matters, and Why NASA Just Switched Part of It Off
+
+*** URL
+https://www.npr.org/2026/04/19/nx-s1-5789935/voyager-1-probe-nasa
+
+*** Date
+2026-04-19T00:00:00+00:00
+
+*** Summary
+"While shutting down a science instrument is not anybody's preference, it is the best option available." -- Kareem Badaruddin, Voyager mission manager at JPL
+
+NASA announced this week that it has shut down one of Voyager 1's remaining science instruments to conserve power and extend the spacecraft's operational life, nearly 50 years after its launch.
+
+Voyager 1, launched in 1977 as a five-year mission, has far exceeded expectations by operating for nearly five decades and becoming the most distant human-made object ever built, now over 15 billion miles from Earth. However, the spacecraft's power supply—a radioisotope thermoelectric generator that decays by about 4 watts yearly—is becoming critically depleted, forcing NASA engineers to make difficult decisions about which instruments to deactivate. By shutting down the Low-energy Charged Particles experiment (LECP) on April 17, mission managers hope to extend operations by roughly another year while preserving the spacecraft's most scientifically valuable remaining instruments.
+
+* Disney
+
+** Disney Creates Its Own IMAX for 'Avengers: Doomsday' After Losing Screens to 'Dune: Part 3'
+
+*** URL
+https://entertainment.slashdot.org/story/26/04/19/0236210/disney-creates-its-own-imax-for-avengers-doomsday-after-losing-screens-to-dune-part-3?utm_source=rss1.0mainlinkanon&utm_medium=feed
+
+*** Date
+2026-04-19T16:40:17.698Z
+
+*** Summary
+Disney has created "Infinity Vision," a new premium large-format theater certification program, after IMAX screens were already booked by "Dune: Part Three" for the holiday season when "Avengers: Doomsday" releases in December.
+
+Disney's move highlights the competitive pressure studios face in securing premium theater experiences for major blockbuster releases. By developing its own certification standard featuring laser projection and immersive audio, Disney is attempting to create an alternative to IMAX that can command premium ticket prices (estimated at $43) when established premium formats are unavailable. The program aims to certify 75 theaters in the United States and 300 internationally, beginning with a summer theater run of "Avengers: Endgame" before "Doomsday's" holiday release.
+
+* Industry News
+
+** Venture capitalist Ron Conway says he is starting treatment for a 'rare' cancer
+
+*** URL
+https://www.businessinsider.com/venture-capital-ron-conway-cancer-treatment-prognosis-2026-4
+
+*** Date
+2026-04-19T04:08:21.335Z
+
+*** Summary
+"I want to share some difficult news. I was recently diagnosed with a rare form of cancer and I want you to hear it directly from me. Treatment is starting immediately and will include multiple strategies over the course of about a year. While I will be stepping back from some of my usual activities, I will continue to support SV Angel founders, who I love with a passion." -- Ron Conway
+
+Legendary venture capitalist Ron Conway, known as "The Godfather of Silicon Valley," has revealed he was recently diagnosed with a rare form of cancer and is stepping back from some of his work at SV Angel to begin treatment.
+
+Conway, a 75-year-old angel investor since the '90s and early investor in major tech companies like Google and Facebook, announced the diagnosis on X, stating that treatment will span about a year with multiple strategies. While he is stepping back from some activities, he plans to continue supporting SV Angel founders, and he expressed optimism about his prognosis without disclosing the specific cancer type to avoid speculation.
+
+* In Other News
+
+* Leo's Picks
+
+* In Memoriam
+
