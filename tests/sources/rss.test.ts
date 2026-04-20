@@ -66,6 +66,33 @@ describe("parseRssXml", () => {
     const stories = parseRssXml("not xml", "Bad Feed", 48);
     expect(stories).toHaveLength(0);
   });
+
+  test("drops items with missing pubDate (no default-to-now)", () => {
+    const undated = `<?xml version="1.0"?>
+<rss version="2.0"><channel>
+  <item>
+    <title>No date story</title>
+    <link>https://example.com/no-date</link>
+    <description>Should be dropped.</description>
+  </item>
+</channel></rss>`;
+    const stories = parseRssXml(undated, "Test Feed", 48);
+    expect(stories).toHaveLength(0);
+  });
+
+  test("drops items with unparseable pubDate", () => {
+    const garbage = `<?xml version="1.0"?>
+<rss version="2.0"><channel>
+  <item>
+    <title>Garbage date story</title>
+    <link>https://example.com/garbage</link>
+    <description>Should be dropped.</description>
+    <pubDate>not a real date</pubDate>
+  </item>
+</channel></rss>`;
+    const stories = parseRssXml(garbage, "Test Feed", 48);
+    expect(stories).toHaveLength(0);
+  });
 });
 
 describe("parseOpml", () => {
