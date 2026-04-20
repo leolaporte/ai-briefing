@@ -30,10 +30,22 @@ describe("parseTwitShowHtml", () => {
     });
   });
 
+  test("extracts a substantial number of picks across all sections (regression guard)", () => {
+    const parsed = parseTwitShowHtml(twitHtml, "twit");
+    const total = parsed.sections.reduce((acc, s) => acc + s.picks.length, 0);
+    expect(total).toBeGreaterThan(20);
+  });
+
   test("handles the IM fixture (Wednesday show)", () => {
     const parsed = parseTwitShowHtml(imHtml, "im");
     expect(parsed.show).toBe("im");
     expect(parsed.episode_date).toBe("2026-04-15");
     expect(parsed.sections.length).toBeGreaterThan(0);
+  });
+
+  test("decodes HTML entities in section names (IM fixture has Leo's Picks)", () => {
+    const parsed = parseTwitShowHtml(imHtml, "im");
+    const names = parsed.sections.map((s) => s.name);
+    expect(names).toContain("Leo's Picks");
   });
 });

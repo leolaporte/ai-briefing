@@ -23,6 +23,9 @@ const MONTHS: Record<string, string> = {
   july: "07", august: "08", september: "09", october: "10", november: "11", december: "12",
 };
 
+const decodeEntities = (s: string): string =>
+  s.replace(/&amp;/g, "&").replace(/&#39;|&apos;/g, "'").replace(/&quot;/g, '"');
+
 function parseEpisodeDate(title: string): string {
   // "This Week in Tech Briefing - Sunday, 19 April 2026"
   const m = title.match(/(\d{1,2})\s+(\w+)\s+(\d{4})/i);
@@ -44,7 +47,7 @@ export function parseTwitShowHtml(html: string, show: Show): ParsedPage {
   const splits: Array<{ order: number; name: string; start: number }> = [];
   let sm: RegExpExecArray | null;
   while ((sm = sectionRegex.exec(html)) !== null) {
-    splits.push({ order: Number(sm[1]), name: sm[2].trim(), start: sm.index + sm[0].length });
+    splits.push({ order: Number(sm[1]), name: decodeEntities(sm[2].trim()), start: sm.index + sm[0].length });
   }
   for (let i = 0; i < splits.length; i++) {
     const end = i + 1 < splits.length ? splits[i + 1].start : html.length;
@@ -54,7 +57,7 @@ export function parseTwitShowHtml(html: string, show: Show): ParsedPage {
     let em: RegExpExecArray | null;
     let rank = 1;
     while ((em = entryRegex.exec(body)) !== null) {
-      const title = em[1].replace(/&amp;/g, "&").replace(/&#39;|&apos;/g, "'").replace(/&quot;/g, '"').trim();
+      const title = decodeEntities(em[1].trim());
       const url = em[2].replace(/&amp;/g, "&");
       picks.push({ url, title, rank_in_section: rank++ });
     }
