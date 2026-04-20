@@ -20,9 +20,9 @@ rss:
     - url: https://huggingface.co/blog/feed.xml
       name: Hugging Face
 
-ollama:
-  model: "qwen3:8b"
-  base_url: "http://localhost:11434"
+claude:
+  model: "claude-haiku-4-5"
+  max_tokens: 4096
 
 output:
   path: "~/Obsidian/lgl/AI/News"

@@ -49,9 +49,9 @@ async function main() {
   const ranked = dedupeAndRank(allStories, 30);
   console.log(`[ai-briefing] ${ranked.length} stories after dedup`);
 
-  // Summarize via Ollama
-  console.log("[ai-briefing] summarizing via ollama...");
-  const briefing = await summarize(ranked, config.ollama, config.output.categories);
+  // Summarize via Claude
+  console.log("[ai-briefing] summarizing via claude...");
+  const briefing = await summarize(ranked, config.claude, config.output.categories);
 
   // Write to Obsidian
   const now = new Date();
@@ -62,7 +62,7 @@ async function main() {
   // config.output.path is like /home/leo/Obsidian/lgl/AI/News
   // vault root is /home/leo/Obsidian/lgl
   const vaultPath = config.output.path.replace(/\/AI\/News\/?$/, "");
-  linkInDailyNote(vaultPath, now);
+  await linkInDailyNote(vaultPath, now);
 
   const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
   console.log(`[ai-briefing] done in ${elapsed}s — ${filepath}`);

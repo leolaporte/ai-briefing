@@ -29,9 +29,9 @@ export interface RssConfig {
   opml_file?: string;
 }
 
-export interface OllamaConfig {
+export interface ClaudeConfig {
   model: string;
-  base_url: string;
+  max_tokens: number;
 }
 
 export interface OutputConfig {
@@ -43,7 +43,7 @@ export interface Config {
   tavily: TavilyConfig;
   hackernews: HackernewsConfig;
   rss: RssConfig;
-  ollama: OllamaConfig;
+  claude: ClaudeConfig;
   output: OutputConfig;
 }
 

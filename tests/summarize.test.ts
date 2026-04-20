@@ -1,5 +1,5 @@
 import { describe, test, expect } from "bun:test";
-import { buildPrompt, buildFallbackBriefing } from "../src/summarize";
+import { buildPrompt, buildFallbackBriefing, parseClaudeResponse } from "../src/summarize";
 import type { Story } from "../src/types";
 
 const sampleStories: Story[] = [
@@ -52,5 +52,35 @@ describe("buildFallbackBriefing", () => {
     const briefing = buildFallbackBriefing(sampleStories, categories);
     const allCategorized = Object.values(briefing.categories).flat();
     expect(briefing.topStories.length + allCategorized.length).toBe(sampleStories.length);
+  });
+});
+
+describe("parseClaudeResponse", () => {
+  const validJson = JSON.stringify({
+    topStories: [
+      { title: "GPT-5", take: "Big reasoning gains", source: "Tavily", url: "https://example.com/gpt5" },
+    ],
+    categories: {
+      "Models & Releases": [
+        { title: "EU AI Act", summary: "Comprehensive rules", source: "Ars", url: "https://example.com/eu-ai" },
+      ],
+    },
+  });
+
+  test("parses valid JSON into a SummarizedBriefing", () => {
+    const briefing = parseClaudeResponse(validJson, categories);
+    expect(briefing.topStories).toHaveLength(1);
+    expect(briefing.topStories[0].take).toBe("Big reasoning gains");
+    expect(briefing.categories["Models & Releases"]).toHaveLength(1);
+  });
+
+  test("backfills missing categories with empty arrays", () => {
+    const briefing = parseClaudeResponse(validJson, categories);
+    for (const c of categories) {
+      expect(briefing.categories[c]).toBeDefined();
+      expect(Array.isArray(briefing.categories[c])).toBe(true);
+    }
+    expect(briefing.categories["Policy & Safety"]).toEqual([]);
+    expect(briefing.categories["Research"]).toEqual([]);
   });
 });

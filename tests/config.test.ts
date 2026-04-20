@@ -12,8 +12,8 @@ describe("loadConfig", () => {
     expect(config.rss.feeds.length).toBeGreaterThan(0);
     expect(config.rss.feeds[0].url).toBeString();
     expect(config.rss.feeds[0].name).toBeString();
-    expect(config.ollama.model).toBe("qwen3:8b");
-    expect(config.ollama.base_url).toBe("http://localhost:11434");
+    expect(config.claude.model).toBe("claude-haiku-4-5");
+    expect(config.claude.max_tokens).toBe(4096);
     expect(config.output.path).toContain("Obsidian");
     expect(config.output.categories).toContain("Models & Releases");
   });

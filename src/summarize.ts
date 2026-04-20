@@ -1,4 +1,5 @@
-import type { Story, OllamaConfig, SummarizedBriefing } from "./types";
+import Anthropic from "@anthropic-ai/sdk";
+import type { Story, ClaudeConfig, SummarizedBriefing } from "./types";
 
 export function buildPrompt(stories: Story[], categories: string[]): string {
   const storyList = stories
@@ -54,9 +55,17 @@ export function buildFallbackBriefing(stories: Story[], categories: string[]): S
   return { topStories, categories: cats };
 }
 
+export function parseClaudeResponse(text: string, categories: string[]): SummarizedBriefing {
+  const briefing = JSON.parse(text) as SummarizedBriefing;
+  for (const c of categories) {
+    if (!briefing.categories[c]) briefing.categories[c] = [];
+  }
+  return briefing;
+}
+
 export async function summarize(
   stories: Story[],
-  ollamaConfig: OllamaConfig,
+  claudeConfig: ClaudeConfig,
   categories: string[]
 ): Promise<SummarizedBriefing> {
   if (stories.length === 0) {
@@ -64,33 +73,31 @@ export async function summarize(
   }
 
   try {
+    const client = new Anthropic();
     const prompt = buildPrompt(stories, categories);
-    const res = await fetch(`${ollamaConfig.base_url}/api/generate`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: ollamaConfig.model,
-        prompt,
-        stream: false,
-        format: "json",
-      }),
+    const response = await client.messages.create({
+      model: claudeConfig.model,
+      max_tokens: claudeConfig.max_tokens,
+      messages: [{ role: "user", content: prompt }],
     });
 
-    if (!res.ok) {
-      console.error(`[ollama] summarization failed: ${res.status}`);
+    const textBlock = response.content.find((b) => b.type === "text");
+    if (!textBlock || textBlock.type !== "text") {
+      console.error("[claude] no text block in response");
       return buildFallbackBriefing(stories, categories);
     }
 
-    const data = (await res.json()) as { response: string };
-    const briefing = JSON.parse(data.response) as SummarizedBriefing;
-
-    for (const c of categories) {
-      if (!briefing.categories[c]) briefing.categories[c] = [];
+    const raw = textBlock.text.trim();
+    const jsonStart = raw.indexOf("{");
+    const jsonEnd = raw.lastIndexOf("}");
+    if (jsonStart === -1 || jsonEnd === -1) {
+      console.error("[claude] no JSON object in response");
+      return buildFallbackBriefing(stories, categories);
     }
 
-    return briefing;
+    return parseClaudeResponse(raw.slice(jsonStart, jsonEnd + 1), categories);
   } catch (err) {
-    console.error("[ollama] summarization error, using fallback:", err);
+    console.error("[claude] summarization error, using fallback:", err);
     return buildFallbackBriefing(stories, categories);
   }
 }
