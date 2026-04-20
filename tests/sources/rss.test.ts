@@ -1,6 +1,13 @@
 import { describe, test, expect } from "bun:test";
 import { parseRssXml, parseOpml } from "../../src/sources/rss";
 
+// Use dynamic dates so tests don't expire as time passes
+const recentDate = new Date(Date.now() - 6 * 60 * 60 * 1000); // 6 hours ago
+const oldDate = new Date(Date.now() - 8 * 24 * 60 * 60 * 1000); // 8 days ago
+const recentRfc = recentDate.toUTCString();
+const oldRfc = oldDate.toUTCString();
+const recentIso = recentDate.toISOString();
+
 const sampleRss = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0">
   <channel>
@@ -9,13 +16,13 @@ const sampleRss = `<?xml version="1.0" encoding="UTF-8"?>
       <title>AI breakthrough announced</title>
       <link>https://example.com/ai-breakthrough</link>
       <description>A major AI breakthrough was announced today.</description>
-      <pubDate>Thu, 03 Apr 2026 12:00:00 GMT</pubDate>
+      <pubDate>${recentRfc}</pubDate>
     </item>
     <item>
       <title>Old news story</title>
       <link>https://example.com/old-news</link>
       <description>This happened a week ago.</description>
-      <pubDate>Thu, 27 Mar 2026 12:00:00 GMT</pubDate>
+      <pubDate>${oldRfc}</pubDate>
     </item>
   </channel>
 </rss>`;
@@ -27,7 +34,7 @@ const sampleAtom = `<?xml version="1.0" encoding="UTF-8"?>
     <title>New model released</title>
     <link href="https://example.com/new-model"/>
     <summary>A new open source model dropped today.</summary>
-    <updated>2026-04-03T10:00:00Z</updated>
+    <updated>${recentIso}</updated>
   </entry>
 </feed>`;
 
@@ -57,6 +64,33 @@ describe("parseRssXml", () => {
 
   test("returns empty array for invalid XML", () => {
     const stories = parseRssXml("not xml", "Bad Feed", 48);
+    expect(stories).toHaveLength(0);
+  });
+
+  test("drops items with missing pubDate (no default-to-now)", () => {
+    const undated = `<?xml version="1.0"?>
+<rss version="2.0"><channel>
+  <item>
+    <title>No date story</title>
+    <link>https://example.com/no-date</link>
+    <description>Should be dropped.</description>
+  </item>
+</channel></rss>`;
+    const stories = parseRssXml(undated, "Test Feed", 48);
+    expect(stories).toHaveLength(0);
+  });
+
+  test("drops items with unparseable pubDate", () => {
+    const garbage = `<?xml version="1.0"?>
+<rss version="2.0"><channel>
+  <item>
+    <title>Garbage date story</title>
+    <link>https://example.com/garbage</link>
+    <description>Should be dropped.</description>
+    <pubDate>not a real date</pubDate>
+  </item>
+</channel></rss>`;
+    const stories = parseRssXml(garbage, "Test Feed", 48);
     expect(stories).toHaveLength(0);
   });
 });

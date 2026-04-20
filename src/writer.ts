@@ -1,96 +1,101 @@
 import { mkdirSync, writeFileSync, readFileSync, existsSync } from "fs";
 import { join } from "path";
-import type { SummarizedBriefing } from "./types";
+import type { SelectionSplit, ScoredCluster } from "./selection";
+import type { Show } from "./labels";
 
-function formatDate(date: Date): string {
-  return date.toISOString().split("T")[0];
+function pad2(n: number): string { return n < 10 ? `0${n}` : `${n}`; }
+function dateStr(d: Date): string { return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`; }
+function monthDir(d: Date): string { return `${d.getFullYear()}/${pad2(d.getMonth() + 1)}`; }
+function headingDate(d: Date): string {
+  return d.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
 }
 
-function formatHeadingDate(date: Date): string {
-  return date.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+export function briefingPathFor(basePath: string, d: Date): string {
+  return join(basePath, monthDir(d), `${dateStr(d)}.md`);
 }
 
-export function renderBriefing(briefing: SummarizedBriefing, date: Date, storyCount: number): string {
-  const lines: string[] = [];
+const SHOW_LABEL: Record<Show, string> = {
+  twit: "TWiT (general tech)",
+  mbw: "MBW (Apple)",
+  im: "IM (AI)",
+};
 
-  // Frontmatter
-  lines.push("---");
-  lines.push(`date: ${formatDate(date)}`);
-  lines.push("type: ai-briefing");
-  lines.push("sources: [tavily, hackernews, rss]");
-  lines.push(`story_count: ${storyCount}`);
-  lines.push("---");
-  lines.push("");
-  lines.push(`# AI Briefing — ${formatHeadingDate(date)}`);
-  lines.push("");
-
-  // Top Stories
-  if (briefing.topStories.length > 0) {
-    lines.push("## Top Stories");
-    for (const story of briefing.topStories) {
-      lines.push(`- **${story.title}** — ${story.take} ([${story.source}](${story.url}))`);
+function renderShowSection(show: Show, picks: ScoredCluster[]): string {
+  if (picks.length === 0) return "";
+  const lines: string[] = [`## ${SHOW_LABEL[show]} — ${picks.length} candidate${picks.length === 1 ? "" : "s"}`];
+  for (const pick of picks) {
+    const canonicalIdx = Math.max(0, Math.min(pick.cluster.length - 1, pick.scoring[show].canonical_idx - 1));
+    const canonical = pick.cluster[canonicalIdx];
+    const summary = canonical.first_para?.slice(0, 200) ?? "";
+    lines.push(`- **${canonical.title}** — ${summary} ([${canonical.source_name}](${canonical.url_canonical}))`);
+    for (let i = 0; i < pick.cluster.length; i++) {
+      if (i === canonicalIdx) continue;
+      const alt = pick.cluster[i];
+      lines.push(`  - ([${alt.source_name}](${alt.url_canonical}))`);
     }
-    lines.push("");
   }
-
-  // Categories
-  for (const [category, stories] of Object.entries(briefing.categories)) {
-    if (stories.length === 0) continue;
-    lines.push(`## ${category}`);
-    for (const story of stories) {
-      lines.push(`- **${story.title}** — ${story.summary} ([${story.source}](${story.url}))`);
-    }
-    lines.push("");
-  }
-
+  lines.push("");
   return lines.join("\n");
 }
 
-export function writeBriefing(briefing: SummarizedBriefing, outputPath: string, date: Date, storyCount: number): string {
-  mkdirSync(outputPath, { recursive: true });
-  const filename = `${formatDate(date)}.md`;
-  const filepath = join(outputPath, filename);
-  const content = renderBriefing(briefing, date, storyCount);
-  writeFileSync(filepath, content, "utf-8");
-  console.log(`[writer] wrote briefing to ${filepath}`);
-  return filepath;
+function renderOtherSection(clusters: ScoredCluster[]): string {
+  if (clusters.length === 0) return "";
+  const lines = [`## Other notable — ${clusters.length} below-threshold items`, ""];
+  lines.push("*Items that didn't hit the per-show cutoff but scored above floor on at least one axis.*", "");
+  for (const c of clusters) {
+    const canonical = c.cluster[0];
+    lines.push(`- **${canonical.title}** ([${canonical.source_name}](${canonical.url_canonical}))`);
+  }
+  lines.push("");
+  return lines.join("\n");
 }
 
-/**
- * Append a link to the AI briefing in the Obsidian daily note for the given date.
- * Daily notes live at: ~/Obsidian/lgl/Daily Notes/YYYY/MM/YYYY-MM-DD.md
- * The link line looks like: [[AI/News/YYYY-MM-DD|AI Briefing]]
- */
-export function linkInDailyNote(vaultPath: string, date: Date): void {
-  const dateStr = formatDate(date);
-  const [year, month] = dateStr.split("-");
-  const dailyNotePath = join(vaultPath, "Daily Notes", year, month, `${dateStr}.md`);
-  const linkLine = `\n[[AI/News/${dateStr}|AI Briefing]]\n`;
+export function renderBriefing(split: SelectionSplit, date: Date, poolSize: number): string {
+  const sections = [
+    `---\ndate: ${dateStr(date)}\ntype: tech-briefing\npool_size: ${poolSize}\n---`,
+    "",
+    `# Tech Briefing — ${headingDate(date)}`,
+    "",
+    renderShowSection("twit", split.twit),
+    renderShowSection("mbw", split.mbw),
+    renderShowSection("im", split.im),
+    renderOtherSection(split.other),
+  ];
+  return sections.filter(Boolean).join("\n");
+}
 
-  if (!existsSync(dailyNotePath)) {
-    console.log(`[writer] daily note not found at ${dailyNotePath}, skipping link`);
+export function writeBriefing(
+  split: SelectionSplit,
+  basePath: string,
+  date: Date,
+  poolSize: number
+): string {
+  const path = briefingPathFor(basePath, date);
+  mkdirSync(join(basePath, monthDir(date)), { recursive: true });
+  writeFileSync(path, renderBriefing(split, date, poolSize), "utf-8");
+  console.log(`[writer] wrote briefing to ${path}`);
+  return path;
+}
+
+// --- daily-note integration (ported from existing writer.ts, minus banner/weather which still run elsewhere) ---
+
+export async function linkInDailyNote(vaultPath: string, date: Date): Promise<void> {
+  const ds = dateStr(date);
+  const dir = join(vaultPath, "Daily Notes", monthDir(date));
+  const notePath = join(dir, `${ds}.md`);
+  const linkLine = `[[AI/News/${monthDir(date)}/${ds}|📰 Tech Briefing]]`;
+  if (!existsSync(notePath)) return;
+
+  const content = readFileSync(notePath, "utf-8");
+  if (content.includes(`[[AI/News/${monthDir(date)}/${ds}|`)) {
+    console.log("[writer] daily note already has tech briefing link, skipping");
     return;
   }
-
-  const content = readFileSync(dailyNotePath, "utf-8");
-  // Don't add duplicate links
-  if (content.includes(`[[AI/News/${dateStr}|AI Briefing]]`)) {
-    console.log("[writer] daily note already has briefing link, skipping");
-    return;
-  }
-
-  // Append after the frontmatter closing ---
-  // Find the second --- (end of frontmatter)
-  const frontmatterEnd = content.indexOf("---", content.indexOf("---") + 3);
-  if (frontmatterEnd === -1) {
-    // No frontmatter, append to end
-    writeFileSync(dailyNotePath, content + linkLine, "utf-8");
-  } else {
-    // Insert after the line that contains the second ---
-    const insertPos = content.indexOf("\n", frontmatterEnd) + 1;
-    const updated = content.slice(0, insertPos) + linkLine + content.slice(insertPos);
-    writeFileSync(dailyNotePath, updated, "utf-8");
-  }
-
-  console.log(`[writer] added briefing link to daily note ${dailyNotePath}`);
+  const marker = "#### Exercise";
+  const pos = content.indexOf(marker);
+  const updated = pos !== -1
+    ? content.slice(0, pos) + linkLine + "\n\n" + content.slice(pos)
+    : content + "\n" + linkLine + "\n";
+  writeFileSync(notePath, updated, "utf-8");
+  console.log(`[writer] added tech briefing link to ${notePath}`);
 }

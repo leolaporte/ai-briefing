@@ -26,8 +26,9 @@ export function parseRssXml(xml: string, feedName: string, maxAgeHours: number):
       const summary = extractTag(block, isAtom ? "summary" : "description");
       const dateStr = extractTag(block, isAtom ? "updated" : "pubDate");
 
-      const publishedAt = dateStr ? new Date(dateStr) : new Date();
-
+      if (!dateStr) continue;
+      const publishedAt = new Date(dateStr);
+      if (isNaN(publishedAt.getTime())) continue;
       if (publishedAt < cutoff) continue;
 
       stories.push({
