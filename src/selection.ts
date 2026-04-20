@@ -1,5 +1,5 @@
 import type { StoryRow } from "./archive";
-import type { ClusterScoring, ShowScore } from "./scorer";
+import type { ClusterScoring } from "./scorer";
 import type { Show } from "./labels";
 
 export interface ScoredCluster {
