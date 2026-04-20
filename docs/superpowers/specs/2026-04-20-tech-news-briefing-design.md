@@ -63,43 +63,41 @@ CREATE INDEX idx_stories_source ON stories(source_domain);
 
 ### 4.2 `~/.local/share/ai-briefing/labels.db` — positive examples
 
-Scraped from `twit.show/{twit,mbw,im}` — the final hand-curated version for each show.
+**Source:** local archive folders maintained by Leo, one per show:
 
-**Ephemerality constraint:** the twit.show pages reset after each show airs. The final curated version only exists during a narrow window — from when Leo finishes editing (typically same day as recording) until that night's overwrite. The scraper must capture each show's page within that window or the labels for that week are lost.
+- `~/Documents/archive-twit/`
+- `~/Documents/archive-mbw/`
+- `~/Documents/archive-im/`
 
-**Show record times** (America/Los_Angeles):
-- **TWiT** — 2:00 PM Sundays
-- **MBW** — 11:00 AM Tuesdays
-- **IM** — 2:00 PM Wednesdays
+Each folder contains the outputs of `prepare-briefing` for final (hand-curated) show rundowns. File patterns observed: `<show>-YYYY-MM-DD.html`, `<show>-YYYY-MM-DD.org`, `<show>-YYYY-MM-DD-LINKS.csv`. Every episode has a `-LINKS.csv`; most also have `.org`; the most recent few additionally have `.html`.
 
-**Scrape schedule** (systemd user timers on Framework, local Pacific time). The page is frozen the instant each show starts — Leo won't edit after that. Primary scrape fires at show-start; fallback sweeps the window in case of transient failure.
-- **TWiT** — primary Sundays **2:00 PM PT**; fallback hourly Sun 2 PM – 11 PM.
-- **MBW** — primary Tuesdays **11:00 AM PT**; fallback hourly Tue 11 AM – 11 PM.
-- **IM** — primary Wednesdays **2:00 PM PT**; fallback hourly Wed 2 PM – 11 PM.
+**Ingest rules:**
 
-Each scrape parses the page date from the HTML `<title>` (e.g. "Sunday, 19 April 2026"). Matching date → stored as authoritative; fallback checks skip storing (deduped by page date + URL hash). Stale/mismatched page at the primary fire → retried on next fallback tick. If no authoritative capture by 11 PM, fires a `ntfy`/Discord alert so Leo can manually save the page before overnight reset.
+- Show is inferred from the folder name (`archive-<show>/`).
+- Episode date is extracted from the filename stem (`<show>-YYYY-MM-DD`).
+- When multiple formats exist for the same `(show, date)` stem, the highest-fidelity parser wins: **HTML > org > CSV**. Lower-fidelity siblings are skipped.
+- Ingestion runs at the **start of every daily briefing run** as step 0, before OPML fetch. Idempotent via the `UNIQUE(show, episode_date, story_url)` constraint.
 
-**Backfill strategy:**
-
-1. **Historical archive (maintained by Leo):** each show has an `archive/` subfolder at `twit.show/<show>/archive/` holding past final-version pages. Assumed filename convention `YYYY-MM-DD.html` (Leo to confirm; scraper adapts). The archive is crawled **once** at deployment to populate historical labels, then checked incrementally for any new dated pages Leo adds.
-2. **Live capture:** forward-looking per the schedule above — captures each new show's page as it airs, before overnight reset.
+**No HTTP scraping of `twit.show`.** An earlier design scraped the ephemeral `twit.show/<show>/` pages on a per-show timer; that's been removed. The local archive is the single source of truth. Leo's existing workflow (saving `prepare-briefing` outputs into `~/Documents/archive-<show>/`) populates it naturally, and the daily run re-ingests any new files.
 
 ```sql
 CREATE TABLE picks (
   id INTEGER PRIMARY KEY,
   show TEXT NOT NULL,             -- "twit" | "mbw" | "im"
-  episode_date TEXT NOT NULL,     -- the dated twit.show page this came from
-  section_name TEXT,              -- e.g. "1. AI", "2. End of Work"
+  episode_date TEXT NOT NULL,     -- YYYY-MM-DD
+  section_name TEXT,              -- e.g. "AI", "End of Work"
   section_order INTEGER,          -- 1, 2, 3...
   rank_in_section INTEGER,        -- 1 = canonical, 2+ = derivative sources
   story_url TEXT NOT NULL,
   story_title TEXT,
-  scraped_at TEXT NOT NULL
+  scraped_at TEXT NOT NULL,
+  source_file TEXT                -- filename the pick came from, for audit
 );
 CREATE INDEX idx_picks_show_date ON picks(show, episode_date);
+CREATE UNIQUE INDEX idx_picks_unique ON picks(show, episode_date, story_url);
 ```
 
-Populated by a separate scraper run daily (or when a new show page appears). Initial backfill pulls whatever archive `twit.show` exposes.
+**Initial state:** ~33 archived episodes already exist across the three folders (9 TWiT + 13 MBW + 11 IM), providing sufficient few-shot signal from day one. No manual backfill step — step-0 ingest picks them up on the first run.
 
 ### 4.3 Briefing output (Obsidian)
 
@@ -192,7 +190,7 @@ Nothing in B or C requires changes to A's data or output format — `archive.db`
 The overnight loop optimizes a single objective: **recall at cumulative-weekly pick count on held-out `twit.show` weeks**.
 
 **Cadence:**
-- **Active tuning phase (default during Phase C rollout):** weekly, **Wednesday night** after IM's page has been scraped. Agent wakes, replays held-out weeks, writes journal to Obsidian, Leo reads Thursday morning.
+- **Active tuning phase (default during Phase C rollout):** weekly, **Wednesday night** after IM's archive files land (i.e., after Leo saves them to `~/Documents/archive-im/` following the show). Agent wakes, replays held-out weeks, writes journal to Obsidian, Leo reads Thursday morning.
 - **Steady-state (once metrics plateau):** monthly + on-demand. Weekly runs on a stable config mostly churn noise — avoid that once ΔR@20 between runs is consistently < σ.
 
 **Where it runs:** Framework (not macmini, despite the apr19 precedent). This loop is LLM-scoring-only — no MLX training, no GPU, no Apple Silicon dependency. Framework is always on, the pipeline already lives there, and macmini may sleep.
@@ -217,7 +215,7 @@ The overnight loop optimizes a single objective: **recall at cumulative-weekly p
 
 - **Language**: Bun/TypeScript, consistent with existing `ai-briefing` codebase.
 - **Dependencies added (v1):** `better-sqlite3` (SQLite driver for Bun) — to be pinned to a version ≥14 days old per the release-age rule.
-- **Twit.show scraper**: separate module, Playwright not needed — `twit.show` is static HTML. Simple `fetch` + cheerio or regex parsing. Scrape `twit.show/{twit,mbw,im}` for current page (= most recent) on each daily run; scrape dated archive URLs for backfill.
+- **Archive ingest**: `src/twitshow/ingest.ts` walks `~/Documents/archive-{twit,mbw,im}/`, groups files by `(show, date)` stem, picks the highest-fidelity format per stem (HTML > org > CSV), and dispatches to `parse.ts` / `parse-org.ts` / `parse-csv.ts`. Idempotent. No HTTP.
 - **Raindrop**: not needed for v1. Stub module reserved for future side-channel signal.
 - **Testing**: TDD required (per user preference). Parser/dedupe/scoring-prompt-build all unit tested. Integration test hits sandboxed Haiku with a small fixture.
 - **Schema migrations**: hand-written `*.sql` files in `src/migrations/`, applied on startup if not yet present.
@@ -227,9 +225,9 @@ The overnight loop optimizes a single objective: **recall at cumulative-weekly p
 | Risk | Mitigation |
 |------|------------|
 | Leo's tastes are "unpredictable" — model may plateau at low precision | Broad net threshold early; autoresearch tuning once enough data; accept that Phase C may cap below 100% |
-| `twit.show` pages are ephemeral — reset after each show airs | Per-show scrape timers fire at show-start (page is frozen then); hourly fallback until 11 PM. Labels start accruing from deployment day forward. |
-| Missing a scrape window loses that show's weekly labels entirely | Hourly fallback on show day; `ntfy`/Discord alert if no authoritative capture by 11 PM PT. Leo can manually save the page as a recovery path. |
-| Archive filename convention not yet confirmed | Scraper probes `YYYY-MM-DD.html` first, falls back to directory listing if the server permits it. Leo can override with exact pattern in `config.yaml`. |
+| Leo forgets to save archive files after a show → labels miss that week | Daily briefing logs `archive ingest: new_picks=0` when the folder hasn't grown. If that persists past show-day+1, a simple follow-up reminder (manual, or future ntfy hook) surfaces it. |
+| Archive files for the same episode in multiple formats with conflicting content (e.g. draft `.org` + final `.html`) | HTML > org > CSV priority picks the highest-fidelity single source per `(show, date)` stem. Lower-fidelity siblings are ignored entirely, not merged. |
+| Prior-draft files with a non-show date (e.g. MBW on a Sunday) pollute labels | Accepted as low-impact noise for v1: `UNIQUE(show, episode_date, story_url)` prevents exact duplicates; few-shot samples draw from recent picks regardless of whether the date is a canonical show day. If this proves noisy in practice, filter by expected show-day-of-week at ingest. |
 | 24h window misses delayed-publish stories | Acceptable for v1. Phase B could add a "look back 48h for anything not-yet-seen" secondary pass |
 | Claude Haiku insufficient for nuanced show-fit judgment | Phase C autoresearch will compare Haiku vs Sonnet as a tunable parameter |
 | Few-shot prompt grows too long as history accumulates | Cap few-shot at K recent + K nearest; embeddings (Phase B) make "nearest" meaningful |
@@ -242,6 +240,6 @@ Phase A is considered shipped when:
 2. Output file appears at `~/Obsidian/lgl/AI/News/YYYY/MM/YYYY-MM-DD.md` with per-show sections and "Other notable".
 3. Daily note is linked to the new path.
 4. `archive.db` and `labels.db` exist, populated, and queryable.
-5. `twit.show` backfill scraper has populated `labels.db` with whatever archive pages are accessible.
+5. Archive ingest (step 0 of daily run) populates `labels.db` from `~/Documents/archive-{twit,mbw,im}/` on first run.
 6. All code is TDD-tested; baseline test suite (minus 2 pre-existing RSS-parser failures) passes.
 7. After 7 days of operation, Leo can compare the briefing's suggestions against his actual Raindrop bookmarks and the next twit.show page as subjective "is this useful?" signal — ahead of any quantitative tuning.
