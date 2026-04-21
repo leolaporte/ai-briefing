@@ -93,6 +93,22 @@ describe("parseRssXml", () => {
     const stories = parseRssXml(garbage, "Test Feed", 48);
     expect(stories).toHaveLength(0);
   });
+
+  test("decodes HTML entities and strips embedded tags in title and summary", () => {
+    const entityXml = `<?xml version="1.0"?>
+<rss version="2.0"><channel>
+  <item>
+    <title>AT&amp;T &amp; Verizon merge &#8212; big deal</title>
+    <link>https://example.com/att</link>
+    <description>&lt;p&gt;The companies said &quot;yes&quot; to a $5B deal.&lt;/p&gt;</description>
+    <pubDate>${recentRfc}</pubDate>
+  </item>
+</channel></rss>`;
+    const stories = parseRssXml(entityXml, "Test Feed", 48);
+    expect(stories).toHaveLength(1);
+    expect(stories[0].title).toBe("AT&T & Verizon merge \u2014 big deal");
+    expect(stories[0].summary).toBe('The companies said "yes" to a $5B deal.');
+  });
 });
 
 describe("parseOpml", () => {

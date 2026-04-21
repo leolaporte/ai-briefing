@@ -1,6 +1,22 @@
 import { readFileSync, existsSync } from "fs";
 import type { Story, RssConfig, RssFeed } from "../types";
 
+function decodeEntities(s: string): string {
+  return s
+    .replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(Number(n)))
+    .replace(/&#x([0-9a-f]+);/gi, (_, h) => String.fromCodePoint(parseInt(h, 16)))
+    .replace(/&nbsp;/g, " ")
+    .replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&amp;/g, "&");
+}
+
+function cleanText(s: string): string {
+  return decodeEntities(s).replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim();
+}
+
 function extractTag(xml: string, tag: string): string {
   const attrMatch = xml.match(new RegExp(`<${tag}[^>]*href="([^"]*)"`, "i"));
   if (attrMatch && tag === "link") return attrMatch[1];
@@ -32,11 +48,11 @@ export function parseRssXml(xml: string, feedName: string, maxAgeHours: number):
       if (publishedAt < cutoff) continue;
 
       stories.push({
-        title,
+        title: cleanText(title),
         url: link,
         source: "rss",
         sourceName: feedName,
-        summary: summary.replace(/<[^>]*>/g, "").slice(0, 300),
+        summary: cleanText(summary).slice(0, 300),
         publishedAt,
       });
     }
