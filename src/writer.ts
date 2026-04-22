@@ -1,4 +1,4 @@
-import { mkdirSync, writeFileSync, readFileSync, existsSync } from "fs";
+import { mkdirSync, writeFileSync } from "fs";
 import { join } from "path";
 import type { SelectionSplit, ScoredCluster } from "./selection";
 import type { Show } from "./labels";
@@ -75,27 +75,4 @@ export function writeBriefing(
   writeFileSync(path, renderBriefing(split, date, poolSize), "utf-8");
   console.log(`[writer] wrote briefing to ${path}`);
   return path;
-}
-
-// --- daily-note integration (ported from existing writer.ts, minus banner/weather which still run elsewhere) ---
-
-export async function linkInDailyNote(vaultPath: string, date: Date): Promise<void> {
-  const ds = dateStr(date);
-  const dir = join(vaultPath, "Daily Notes", monthDir(date));
-  const notePath = join(dir, `${ds}.md`);
-  const linkLine = `[[AI/News/${monthDir(date)}/${ds}|📰 Tech Briefing]]`;
-  if (!existsSync(notePath)) return;
-
-  const content = readFileSync(notePath, "utf-8");
-  if (content.includes(`[[AI/News/${monthDir(date)}/${ds}|`)) {
-    console.log("[writer] daily note already has tech briefing link, skipping");
-    return;
-  }
-  const marker = "#### Exercise";
-  const pos = content.indexOf(marker);
-  const updated = pos !== -1
-    ? content.slice(0, pos) + linkLine + "\n\n" + content.slice(pos)
-    : content + "\n" + linkLine + "\n";
-  writeFileSync(notePath, updated, "utf-8");
-  console.log(`[writer] added tech briefing link to ${notePath}`);
 }

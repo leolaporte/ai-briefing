@@ -1,3 +1,5 @@
+import { spawnSync } from "child_process";
+import { join } from "path";
 import { loadConfig } from "./config";
 import { fetchRss } from "./sources/rss";
 import { ArchiveStore } from "./archive";
@@ -6,7 +8,30 @@ import { ingestArchives } from "./twitshow/ingest";
 import { canonicalizeUrl, clusterStories } from "./cluster";
 import { scoreCluster } from "./scorer";
 import { splitScored, type ScoredCluster } from "./selection";
-import { writeBriefing, linkInDailyNote } from "./writer";
+import { writeBriefing } from "./writer";
+import { ensureBingBanner } from "./banner";
+import { createOrUpdateDailyNote } from "./daily-note";
+
+const DAILY_NOTE = {
+  coordinates: ["38.23242", "-122.63665"] as [string, string],
+  locationName: "Petaluma, California",
+  timezone: "America/Los_Angeles",
+  weatherScript: join(import.meta.dir, "..", "bin", "weather.sh"),
+};
+
+function fetchWeatherLine(): string | null {
+  const result = spawnSync(
+    DAILY_NOTE.weatherScript,
+    [DAILY_NOTE.coordinates[0], DAILY_NOTE.coordinates[1], DAILY_NOTE.locationName, DAILY_NOTE.timezone],
+    { encoding: "utf-8", timeout: 15000 }
+  );
+  if (result.status !== 0) {
+    console.warn(`[daily-note] weather.sh failed: ${result.stderr?.trim()}`);
+    return null;
+  }
+  const line = (result.stdout ?? "").trim();
+  return line.length > 0 ? line : null;
+}
 
 async function main() {
   const startTime = Date.now();
@@ -83,9 +108,17 @@ async function main() {
     // 7. Write briefing to Obsidian
     outPath = writeBriefing(split, config.output.path, now, recent.length);
 
-    // 8. Link in daily note
+    // 8. Create or update the daily note: banner + weather + tech briefing link
     const vaultPath = config.output.path.replace(/\/AI\/News\/?$/, "");
-    await linkInDailyNote(vaultPath, now);
+    const banner = await ensureBingBanner(vaultPath, now);
+    const weatherLine = fetchWeatherLine();
+    const notePath = createOrUpdateDailyNote(vaultPath, {
+      date: now,
+      coordinates: DAILY_NOTE.coordinates,
+      weatherLine,
+      bannerRef: banner?.ref ?? null,
+    });
+    console.log(`[daily-note] ${notePath} (banner=${banner ? "ok" : "skip"} weather=${weatherLine ? "ok" : "skip"})`);
   } finally {
     archive.close();
     labels.close();
