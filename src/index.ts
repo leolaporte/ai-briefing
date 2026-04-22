@@ -11,18 +11,56 @@ import { splitScored, type ScoredCluster } from "./selection";
 import { writeBriefing } from "./writer";
 import { ensureBingBanner } from "./banner";
 import { createOrUpdateDailyNote } from "./daily-note";
+import { fetchLatestLocation } from "./dawarich";
 
-const DAILY_NOTE = {
+const DEFAULT_LOCATION = {
   coordinates: ["38.23242", "-122.63665"] as [string, string],
-  locationName: "Petaluma, California",
+  name: "Petaluma, California",
   timezone: "America/Los_Angeles",
-  weatherScript: join(import.meta.dir, "..", "bin", "weather.sh"),
 };
 
-function fetchWeatherLine(): string | null {
+const DAWARICH_URL = process.env.DAWARICH_URL ?? "http://localhost:3750";
+const DAWARICH_MAX_AGE_SEC = 24 * 3600;
+const WEATHER_SCRIPT = join(import.meta.dir, "..", "bin", "weather.sh");
+
+async function resolveLocation(): Promise<{
+  lat: string;
+  lon: string;
+  name: string;
+  coordsForFrontmatter: [string, string];
+}> {
+  const apiKey = process.env.DAWARICH_API_KEY ?? "";
+  const live = await fetchLatestLocation({
+    url: DAWARICH_URL,
+    apiKey,
+    maxAgeSec: DAWARICH_MAX_AGE_SEC,
+  });
+  if (live) {
+    const lat = live.lat.toFixed(5);
+    const lon = live.lon.toFixed(5);
+    console.log(
+      `[location] dawarich point ${Math.round(live.ageSec / 60)}min old: ${lat}, ${lon}`
+    );
+    return {
+      lat,
+      lon,
+      name: "Current location",
+      coordsForFrontmatter: [lat, lon],
+    };
+  }
+  console.log(`[location] using default (${DEFAULT_LOCATION.name})`);
+  return {
+    lat: DEFAULT_LOCATION.coordinates[0],
+    lon: DEFAULT_LOCATION.coordinates[1],
+    name: DEFAULT_LOCATION.name,
+    coordsForFrontmatter: DEFAULT_LOCATION.coordinates,
+  };
+}
+
+function fetchWeatherLine(lat: string, lon: string, name: string): string | null {
   const result = spawnSync(
-    DAILY_NOTE.weatherScript,
-    [DAILY_NOTE.coordinates[0], DAILY_NOTE.coordinates[1], DAILY_NOTE.locationName, DAILY_NOTE.timezone],
+    WEATHER_SCRIPT,
+    [lat, lon, name, DEFAULT_LOCATION.timezone],
     { encoding: "utf-8", timeout: 15000 }
   );
   if (result.status !== 0) {
@@ -111,14 +149,17 @@ async function main() {
     // 8. Create or update the daily note: banner + weather + tech briefing link
     const vaultPath = config.output.path.replace(/\/AI\/News\/?$/, "");
     const banner = await ensureBingBanner(vaultPath, now);
-    const weatherLine = fetchWeatherLine();
+    const location = await resolveLocation();
+    const weatherLine = fetchWeatherLine(location.lat, location.lon, location.name);
     const notePath = createOrUpdateDailyNote(vaultPath, {
       date: now,
-      coordinates: DAILY_NOTE.coordinates,
+      coordinates: location.coordsForFrontmatter,
       weatherLine,
       bannerRef: banner?.ref ?? null,
     });
-    console.log(`[daily-note] ${notePath} (banner=${banner ? "ok" : "skip"} weather=${weatherLine ? "ok" : "skip"})`);
+    console.log(
+      `[daily-note] ${notePath} (banner=${banner ? "ok" : "skip"} weather=${weatherLine ? "ok" : "skip"})`
+    );
   } finally {
     archive.close();
     labels.close();
