@@ -19,7 +19,6 @@ const DEFAULT_LOCATION = {
   timezone: "America/Los_Angeles",
 };
 
-const DAWARICH_URL = process.env.DAWARICH_URL ?? "http://localhost:3750";
 const DAWARICH_MAX_AGE_SEC = 24 * 3600;
 const WEATHER_SCRIPT = join(import.meta.dir, "..", "bin", "weather.sh");
 
@@ -29,12 +28,7 @@ async function resolveLocation(): Promise<{
   name: string;
   coordsForFrontmatter: [string, string];
 }> {
-  const apiKey = process.env.DAWARICH_API_KEY ?? "";
-  const live = await fetchLatestLocation({
-    url: DAWARICH_URL,
-    apiKey,
-    maxAgeSec: DAWARICH_MAX_AGE_SEC,
-  });
+  const live = await fetchLatestLocation({ maxAgeSec: DAWARICH_MAX_AGE_SEC });
   if (live) {
     const lat = live.lat.toFixed(5);
     const lon = live.lon.toFixed(5);

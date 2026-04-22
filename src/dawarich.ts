@@ -1,7 +1,10 @@
+import { spawnSync } from "child_process";
+
 export interface DawarichOpts {
-  url: string;
-  apiKey: string;
   maxAgeSec: number;
+  container?: string;
+  db?: string;
+  user?: string;
 }
 
 export interface DawarichPoint {
@@ -11,45 +14,68 @@ export interface DawarichPoint {
   ageSec: number;
 }
 
-interface RawPoint {
-  latitude?: string | number;
-  longitude?: string | number;
-  timestamp?: number;
+export type PsqlRunner = (sql: string) => string | null;
+
+const LATEST_POINT_SQL =
+  "SELECT ST_Y(lonlat::geometry), ST_X(lonlat::geometry), timestamp " +
+  "FROM points ORDER BY timestamp DESC LIMIT 1;";
+
+function defaultRunner(
+  container: string,
+  db: string,
+  user: string
+): PsqlRunner {
+  return (sql: string) => {
+    const result = spawnSync(
+      "docker",
+      ["exec", container, "psql", "-U", user, "-d", db, "-tAc", sql],
+      { encoding: "utf-8", timeout: 10000 }
+    );
+    if (result.status !== 0) return null;
+    return (result.stdout ?? "").trim();
+  };
+}
+
+export function parseLatestPoint(row: string): { lat: number; lon: number; timestamp: number } | null {
+  if (!row || !row.trim()) return null;
+  const firstLine = row.split("\n")[0].trim();
+  const parts = firstLine.split("|");
+  if (parts.length < 3) return null;
+  const lat = parseFloat(parts[0]);
+  const lon = parseFloat(parts[1]);
+  const timestamp = parseInt(parts[2], 10);
+  if (!Number.isFinite(lat) || !Number.isFinite(lon) || !Number.isFinite(timestamp)) {
+    return null;
+  }
+  return { lat, lon, timestamp };
 }
 
 export async function fetchLatestLocation(
   opts: DawarichOpts,
-  fetchFn: typeof fetch = fetch
+  runner?: PsqlRunner
 ): Promise<DawarichPoint | null> {
-  if (!opts.apiKey) return null;
+  const run =
+    runner ??
+    defaultRunner(
+      opts.container ?? "dawarich_db",
+      opts.db ?? "dawarich_production",
+      opts.user ?? "dawarich"
+    );
 
-  const url = `${opts.url.replace(/\/$/, "")}/api/v1/points?per_page=1&order=desc`;
-
-  let points: RawPoint[];
+  let raw: string | null;
   try {
-    const res = await fetchFn(url, {
-      headers: { Authorization: `Bearer ${opts.apiKey}` },
-    });
-    if (!res.ok) return null;
-    points = (await res.json()) as RawPoint[];
+    raw = run(LATEST_POINT_SQL);
   } catch {
     return null;
   }
+  if (raw === null) return null;
 
-  if (!Array.isArray(points) || points.length === 0) return null;
-
-  const p = points[0];
-  if (!p.timestamp || p.latitude === undefined || p.longitude === undefined) {
-    return null;
-  }
+  const parsed = parseLatestPoint(raw);
+  if (!parsed) return null;
 
   const nowSec = Math.floor(Date.now() / 1000);
-  const ageSec = nowSec - p.timestamp;
+  const ageSec = nowSec - parsed.timestamp;
   if (ageSec > opts.maxAgeSec) return null;
 
-  const lat = typeof p.latitude === "number" ? p.latitude : parseFloat(p.latitude);
-  const lon = typeof p.longitude === "number" ? p.longitude : parseFloat(p.longitude);
-  if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
-
-  return { lat, lon, timestamp: p.timestamp, ageSec };
+  return { ...parsed, ageSec };
 }
