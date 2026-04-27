@@ -2,6 +2,37 @@ import { describe, test, expect, beforeEach, afterEach } from "bun:test";
 import { unlinkSync, existsSync } from "fs";
 import { LabelStore } from "../src/labels";
 
+const TEST_DB = "/tmp/ai-briefing-test-labels.db";
+
+beforeEach(() => {
+  if (existsSync(TEST_DB)) unlinkSync(TEST_DB);
+});
+
+test("labels.db schema has weight and source columns after migration 003", () => {
+  const store = new LabelStore(TEST_DB);
+  const cols = store.tableColumns("picks");
+  expect(cols).toContain("weight");
+  expect(cols).toContain("source");
+  store.close();
+});
+
+test("inserting a pick with weight=0.5 source='raindrop' round-trips", () => {
+  const store = new LabelStore(TEST_DB);
+  store.insertLabeledPicks([{
+    show: "twit",
+    episode_date: "2026-04-26",
+    story_url: "https://example.com/a",
+    story_title: "Test story",
+    source: "raindrop",
+    weight: 0.5,
+  }]);
+  const rows = store.allPicks("twit");
+  expect(rows).toHaveLength(1);
+  expect(rows[0].weight).toBe(0.5);
+  expect(rows[0].source).toBe("raindrop");
+  store.close();
+});
+
 const TMP_DB = "/tmp/ai-briefing-labels-test.sqlite";
 
 describe("LabelStore", () => {
