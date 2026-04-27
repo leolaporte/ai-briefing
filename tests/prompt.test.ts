@@ -14,11 +14,14 @@ describe("buildScoringPrompt", () => {
     const store = new LabelStore(TMP_DB);
     store.insertPicks([
       { show: "twit", episode_date: "2026-04-19", section_name: "AI", section_order: 1,
-        rank_in_section: 1, story_url: "https://ex.com/opus", story_title: "Anthropic Opus 4.7", source_file: null },
+        rank_in_section: 1, story_url: "https://ex.com/opus", story_title: "Anthropic Opus 4.7",
+        source_file: null, weight: 1.0, source: "archive" },
       { show: "mbw", episode_date: "2026-04-14", section_name: "Apple", section_order: 1,
-        rank_in_section: 1, story_url: "https://ex.com/vision", story_title: "Vision Pro rumor", source_file: null },
+        rank_in_section: 1, story_url: "https://ex.com/vision", story_title: "Vision Pro rumor",
+        source_file: null, weight: 1.0, source: "archive" },
       { show: "im", episode_date: "2026-04-15", section_name: "Models", section_order: 1,
-        rank_in_section: 1, story_url: "https://ex.com/llama", story_title: "Llama 5 released", source_file: null },
+        rank_in_section: 1, story_url: "https://ex.com/llama", story_title: "Llama 5 released",
+        source_file: null, weight: 1.0, source: "archive" },
     ]);
 
     const cluster: StoryRow[] = [{

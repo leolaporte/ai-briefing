@@ -91,8 +91,13 @@ export class LabelStore {
       const before = this.db.prepare(`SELECT source FROM picks WHERE show=? AND episode_date=? AND story_url=?`)
         .get(p.show, p.episode_date, p.story_url) as { source: string } | null;
       stmt.run(p.show, p.episode_date, p.story_url, p.story_title, p.source, p.weight, now);
-      if (!before) inserted++;
-      else if (before.source !== p.source) upgraded++;
+      if (!before) {
+        inserted++;
+      } else {
+        const after = this.db.prepare(`SELECT source FROM picks WHERE show=? AND episode_date=? AND story_url=?`)
+          .get(p.show, p.episode_date, p.story_url) as { source: string };
+        if (before.source !== after.source) upgraded++;
+      }
     }
     return { inserted, upgraded };
   }

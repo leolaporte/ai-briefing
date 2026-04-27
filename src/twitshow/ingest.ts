@@ -52,6 +52,8 @@ function toPickRows(parsed: ParsedPage, source_file: string): PickRow[] {
         story_url: pick.url,
         story_title: pick.title,
         source_file,
+        weight: 1.0,
+        source: "archive",
       });
     }
   }
