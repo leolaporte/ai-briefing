@@ -19,6 +19,8 @@ export interface AssignedLabel {
   title: string | null;
 }
 
+// Precondition: all URLs in showNotesUrls/raindropUrls/archiveUrls must
+// already be canonicalized (Set membership relies on byte equality).
 export function assignLabels(inputs: AssignInputs): AssignedLabel[] {
   const all = new Set<string>([
     ...inputs.showNotesUrls,

@@ -18,6 +18,7 @@ async function main() {
   try {
     const result = await harvestShow(show as any, labels, archive);
     console.log(`[harvest:${show}]`, JSON.stringify(result));
+    if ("error" in result) process.exit(1);
   } finally {
     archive.close();
     labels.close();
