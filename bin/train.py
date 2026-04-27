@@ -26,7 +26,8 @@ def load_picks(db_path: Path, show: str) -> list[dict]:
     conn.row_factory = sqlite3.Row
     rows = conn.execute(
         "SELECT story_url, story_title, source, weight, episode_date "
-        "FROM picks WHERE show = ? AND story_title IS NOT NULL",
+        "FROM picks WHERE show = ? AND story_title IS NOT NULL "
+        "AND episode_date >= '2026-04-20'",
         (show,)
     ).fetchall()
     conn.close()
