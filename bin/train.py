@@ -91,7 +91,25 @@ def train(args):
     print(json.dumps(summary))
 
 def score(args):
-    raise NotImplementedError("--score implemented in Task 8")
+    artifact_path = args.model_dir / f"{args.show}.pkl"
+    if not artifact_path.exists():
+        # No model yet — emit zero scores so the caller falls back gracefully
+        candidates = json.load(sys.stdin)
+        out = [{"url": c["url"], "score": 0.0} for c in candidates]
+        print(json.dumps(out))
+        return
+    artifact = joblib.load(artifact_path)
+    clf = artifact["clf"]
+    embedder = SentenceTransformer(artifact["embedding_model"])
+    candidates = json.load(sys.stdin)
+    if not candidates:
+        print(json.dumps([]))
+        return
+    titles = [c.get("title") or c.get("url") for c in candidates]
+    X = embedder.encode(titles, show_progress_bar=False, normalize_embeddings=True)
+    probs = clf.predict_proba(X)[:, 1]
+    out = [{"url": c["url"], "score": float(p)} for c, p in zip(candidates, probs)]
+    print(json.dumps(out))
 
 def main():
     p = argparse.ArgumentParser()

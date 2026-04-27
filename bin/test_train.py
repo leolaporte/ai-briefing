@@ -38,6 +38,41 @@ def make_test_db(path: Path) -> None:
     conn.commit()
     conn.close()
 
+def test_score_returns_probabilities():
+    with tempfile.TemporaryDirectory() as tmp:
+        db = Path(tmp) / "labels.db"
+        model_dir = Path(tmp) / "models"
+        make_test_db(db)
+        # Train first
+        subprocess.run(
+            ["uv", "run", "python", str(ROOT / "bin/train.py"),
+             "--train", "--show", "twit",
+             "--labels-db", str(db), "--model-dir", str(model_dir), "--no-eval"],
+            check=True, cwd=ROOT, capture_output=True,
+        )
+        # Score
+        candidates = [
+            {"url": "https://example.com/anthropic-new", "title": "Anthropic releases Claude 5"},
+            {"url": "https://example.com/celeb", "title": "Kardashian wedding goes viral"},
+        ]
+        result = subprocess.run(
+            ["uv", "run", "python", str(ROOT / "bin/train.py"),
+             "--score", "--show", "twit", "--model-dir", str(model_dir)],
+            input=json.dumps(candidates), capture_output=True, text=True, cwd=ROOT,
+        )
+        assert result.returncode == 0, result.stderr
+        scores = json.loads(result.stdout)
+        assert len(scores) == 2
+        for s in scores:
+            assert 0.0 <= s["score"] <= 1.0
+        # The Anthropic story should outscore the gossip
+        anthropic = next(s for s in scores if "anthropic" in s["url"])
+        gossip = next(s for s in scores if "celeb" in s["url"])
+        assert anthropic["score"] > gossip["score"], (
+            f"expected Anthropic > celebrity, got {anthropic['score']} vs {gossip['score']}"
+        )
+
+
 def test_train_writes_model_artifact():
     with tempfile.TemporaryDirectory() as tmp:
         db = Path(tmp) / "labels.db"
