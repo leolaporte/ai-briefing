@@ -8,7 +8,7 @@
 
 The current Phase A briefing pipeline (deployed 2026-04-20) uses Claude Haiku 4.5 with few-shot examples drawn from `labels.db`. `labels.db` is seeded from historical show rundowns (`~/Documents/archive-{twit,mbw,im}/`) and has no automatic update path. There is no signal for whether a story the briefing surfaces is actually used on the show.
 
-A better ground-truth source exists: the **show notes Links section** at the bottom of each episode page on twit.tv (e.g. `https://twit.tv/shows/this-week-in-tech/episodes/1081`). This lists the URLs Leo actually used. Combined with the Raindrop bookmarks (Leo's first-pass curation, which goes back >1 year for the manually-curated era and Phase A onward for the pipeline-curated era) and the RSS pool in `archive.db` (Phase A onward only), there is a three-tier signal:
+A better ground-truth source exists: the **show notes Links section** at the bottom of each episode page on twit.tv (e.g. `https://twit.tv/shows/this-week-in-tech/episodes/1081`). This lists the URLs Leo actually used. Combined with the Phase A Raindrop bookmarks (the pipeline's tagged first-pass picks, since 2026-04-20) and the RSS pool in `archive.db` (also Phase A onward), there is a three-tier signal:
 
 | Tier | Meaning | Label |
 |---|---|---|
@@ -26,7 +26,7 @@ A per-show classifier that learns Leo's taste from the three-tier signal, pre-fi
 
 - Replacing Haiku entirely. Haiku still scores the shortlist and writes selection rationale.
 - Cross-show models. Each show gets its own classifier; no shared multi-head model.
-- Going further back than 6 months in the backfill. TWiT and IM are mid-pivot; older taste is stale.
+- Backfilling pre-Phase-A data. Older Raindrop bookmarks lack show tags; older shows reflect a pre-pivot taste. Current baseline performance is acceptable, so we start fresh from Phase A (2026-04-20) onward.
 - Auto-applying the eval reports as a feedback signal beyond the weekly retrain. The 4-week-rolling-recall fallback is the only automatic action; everything else is for Leo to read.
 
 ## Architecture
@@ -73,9 +73,11 @@ NEW: trigger per-show retrain
 NEW: write eval report to ~/Obsidian/lgl/AI/News/eval/YYYY-MM-DD-<show>.md
 ```
 
-### Pre-training (one-shot, runs once at deploy)
+### Initial seeding (one-shot, runs once at deploy)
 
-Walks 6 months of historical episode pages and Raindrop bookmarks, populates `labels.db`, trains seed models. Output is three model artifacts and a backfill summary report. Re-runnable safely (idempotent on `labels.db` UNIQUE constraint).
+Walks all Phase A history (2026-04-20 → present) of episode pages and tagged Raindrop bookmarks, populates `labels.db`, trains initial models. Output is three model artifacts and a seeding summary report. Re-runnable safely (idempotent on `labels.db` UNIQUE constraint).
+
+At deploy time this is roughly one week of triplets (~3 shows × 1-2 episodes each). The classifier will be undertrained at the start; the 4-week-rolling-recall safety net keeps the briefing healthy until enough weekly retrains have accumulated. Realistically the classifier earns its keep around weeks 3-4.
 
 ## Components
 
@@ -115,17 +117,16 @@ The existing `raindrop-briefing` Go tool only writes. We need a read-side. Two o
 - **Option A (chosen):** New small Go binary `raindrop-history` in the same repo, reads bookmarks for a date range from the "News Links" collection, emits JSON. Reuses `raindrop.go` client code.
 - Option B: Inline Raindrop API call in the harvester. Rejected — splits the auth/client logic across two languages.
 
-Tagged by show via the `Sections` field that the existing pusher writes (TWiT/MBW/IM). Older manually-curated bookmarks lack tags; the harvester treats untagged bookmarks as ambiguous and uses the Raindrop bookmark date + nearest episode date to assign a show.
+Bookmarks are tagged by show via the `Sections` field that the existing pusher writes (TWiT/MBW/IM). The harvester filters to tagged bookmarks only; untagged bookmarks (pre-Phase-A) are ignored.
 
 ### 4. Trainer (Python sidecar)
 
 `bin/train.py`, run via `uv run`.
 
-- Reads `labels.db` for one show
-- Filters to last 6 months
+- Reads `labels.db` for one show (Phase A onward only)
 - Embeds `title + " — " + summary` via `sentence-transformers/all-MiniLM-L6-v2` (cached locally)
 - Concatenates additional features: source name (one-hot, top-50 sources), cluster size, recency in hours
-- Trains scikit-learn `LogisticRegression(class_weight='balanced')` with sample weights from the `weight` column × recency factor
+- Trains scikit-learn `LogisticRegression(class_weight='balanced')` with sample weights from the `weight` column
 - Saves pickle to `~/.local/share/ai-briefing/models/<show>.pkl` atomically (write to `.tmp`, rename)
 - Writes eval report to `~/Obsidian/lgl/AI/News/eval/YYYY-MM-DD-<show>.md` using a 2-week holdout
 
@@ -181,19 +182,18 @@ Each harvest timer:
 
 If the harvest fails (notes not yet published, network error, parse failure), retry once at +2h. After that, log + voice a warning, do not retrain. Next week's harvest catches up.
 
-## Backfill scope
+## Initial seeding scope
 
-Effective training weight = `label_weight × recency_factor` where `label_weight` lives in `labels.db` (1.0 strong positive, 0.5 weak positive, 1.0 negative) and `recency_factor` is computed at training time (1.0 if ≤ 1 month old, 0.5 otherwise).
+Phase A onward only (2026-04-20 → present). All triplets are full triplets — `archive.db` has the RSS pool, Raindrop has tagged first-pass picks, show notes have the actual usage. No synthetic negatives, no recency reweighting needed at the seeding stage.
 
-| Era | Sources available | Notes |
-|---|---|---|
-| Last ~1 week (Phase A) | `archive.db` pool + Raindrop + show-notes | Full triplets, full recency weight |
-| Prior 6 months | Raindrop + show-notes only | No real RSS pool; recency factor 0.5 |
-| > 6 months ago | Skip | TWiT and IM are mid-pivot; older taste is stale |
+At deploy this is approximately:
+- TWiT: 1 episode (2026-04-26)
+- MBW: 1 episode (2026-04-21)
+- IM: 1 episode (2026-04-22)
 
-Synthetic negatives for the prior-6-months window: random sample from current `archive.db`, sized to 3× positives per show. This is the weakest part of pre-training — these negatives come from the wrong time period. Acknowledged: precision in the first 1-2 weeks may be poor; weekly retrains with real triplets correct it.
+The seeding script (`bin/seed.ts`) is idempotent: re-running does not duplicate rows in `labels.db` (UNIQUE constraint) and re-trains models on whatever is present. Safe to run multiple times during development.
 
-The backfill script (`bin/pretrain.ts`) is idempotent: re-running does not duplicate rows in `labels.db` (UNIQUE constraint) and re-trains models on whatever is present. Safe to run multiple times during development.
+The classifier is undertrained for the first 3-4 weekly retrains. The 4-week-rolling-recall safety net keeps the briefing on the existing Haiku-only path until recall@40 crosses 80%, at which point the classifier starts pre-filtering. This is the warm-up period.
 
 ## Evaluation
 
@@ -241,5 +241,5 @@ Top training-example influences for top-3 shortlist picks: <auditability hook>
 None blocking. Worth noting for the implementation plan:
 
 - The aggregator-pubDate stash (`stash@{0}` in ai-briefing) should be popped and committed *before* this work starts, since the harvester depends on accurate `published_at` for time-windowing the archive.db pool.
-- The Raindrop bookmark tagging strategy for the "manually-curated era" (>1 year of untagged bookmarks) is heuristic. If accuracy turns out to matter, we can add a one-shot `bin/tag-raindrop-history.ts` that uses the show airing date and bookmark date to assign tags.
 - `cluster.ts` URL canonicalization is currently used at cluster time; we need to expose it as a callable function for the harvester. Small refactor.
+- The 80% recall@40 fallback threshold is a placeholder. Once we have 4-6 weeks of real numbers, replace it with a value derived from the empirical distribution (e.g. one standard deviation below the rolling mean).
