@@ -42,11 +42,19 @@ export function extractShowNotesLinks(html: string): ShowNotesLink[] {
  * episode's number and air date.
  */
 export function parseEpisodeListing(html: string): { number: number; date: string } | null {
-  const re = /\/episodes\/(\d+)["'][^>]*>[\s\S]{0,200}?(\w+\s+\d+,\s+\d{4})/;
-  const m = re.exec(html);
-  if (!m) return null;
-  const number = parseInt(m[1], 10);
-  const date = new Date(m[2]).toISOString().slice(0, 10);
+  // Extract most recent episode number from first episodes/NNN occurrence
+  const epRe = /\/episodes\/(\d+)/;
+  const epMatch = epRe.exec(html);
+  if (!epMatch) return null;
+  const number = parseInt(epMatch[1], 10);
+
+  // Extract the date nearest to (after) the episode number.
+  // Handles "Month DD, YYYY" (comma) or "Month DD YYYY" (no comma).
+  const tail = html.slice(epMatch.index);
+  const dateRe = /(\w+\s+\d{1,2},?\s+\d{4})/;
+  const dateMatch = dateRe.exec(tail);
+  if (!dateMatch) return null;
+  const date = new Date(dateMatch[1]).toISOString().slice(0, 10);
   return { number, date };
 }
 
