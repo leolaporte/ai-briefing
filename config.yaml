@@ -1,6 +1,18 @@
 rss:
   opml_file: "~/Sync/beatcheck.opml"
   feeds: []
+  # Aggregator feeds report their own posting time as <pubDate>, not
+  # the linked article's real publish date. For these sources we fetch
+  # the article and read Open Graph article:published_time / JSON-LD
+  # datePublished. Stories whose real date can't be determined are
+  # dropped rather than trusted.
+  aggregator_sources:
+    - "Hacker News"
+    - "MetaFilter"
+    - "Pinboard"
+    - "Lobsters"
+    - "Slashdot"
+    - "Reddit"
 
 claude:
   model: "claude-haiku-4-5"

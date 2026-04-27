@@ -10,7 +10,16 @@ export interface Story {
 }
 
 export interface RssFeed { url: string; name: string; }
-export interface RssConfig { feeds: RssFeed[]; opml_file?: string; }
+export interface RssConfig {
+  feeds: RssFeed[];
+  opml_file?: string;
+  // Feed-name substring patterns (case-insensitive) for aggregator
+  // sources whose <pubDate> reflects when *they* posted the link, not
+  // the underlying article's real publish date. Matched stories get
+  // their publishedAt replaced via Open Graph / JSON-LD lookup; if no
+  // real date is found, the story is dropped.
+  aggregator_sources?: string[];
+}
 
 export interface ClaudeConfig {
   model: string;

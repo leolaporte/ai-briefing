@@ -1,5 +1,13 @@
 import { readFileSync, existsSync } from "fs";
 import type { Story, RssConfig, RssFeed } from "../types";
+import { enrichAggregatorDates } from "./publish-date";
+
+// Default aggregator patterns when config doesn't specify them. These
+// feeds report their own posting timestamp as <pubDate>, so we must
+// look at the underlying article for the real date.
+const DEFAULT_AGGREGATOR_PATTERNS = [
+  "Hacker News", "MetaFilter", "Pinboard", "Lobsters", "Slashdot", "Reddit",
+];
 
 function decodeEntities(s: string): string {
   return s
@@ -138,5 +146,15 @@ export async function fetchRss(config: RssConfig): Promise<Story[]> {
     }
   }
 
-  return allStories;
+  // Aggregator pubDates lie. Replace publishedAt for matched sources by
+  // fetching the linked article's real publish date; drop stories whose
+  // real date can't be determined.
+  const patterns = config.aggregator_sources ?? DEFAULT_AGGREGATOR_PATTERNS;
+  const beforeCount = allStories.length;
+  const enriched = await enrichAggregatorDates(allStories, patterns);
+  const dropped = beforeCount - enriched.length;
+  if (dropped > 0) {
+    console.log(`[rss] dropped ${dropped} aggregator stories with unverifiable publish dates`);
+  }
+  return enriched;
 }
