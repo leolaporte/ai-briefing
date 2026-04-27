@@ -49,3 +49,48 @@ export function parseEpisodeListing(html: string): { number: number; date: strin
   const date = new Date(m[2]).toISOString().slice(0, 10);
   return { number, date };
 }
+
+const SHOW_SLUGS: Record<string, string> = {
+  twit: "this-week-in-tech",
+  mbw: "macbreak-weekly",
+  im: "intelligent-machines",
+};
+
+export interface FetchedShowNotes {
+  show: string;
+  episodeNumber: number;
+  episodeDate: string; // YYYY-MM-DD
+  links: ShowNotesLink[];
+}
+
+/**
+ * Fetch the most recent episode for a show. If `episode` is given, fetches
+ * that specific episode. Returns null on parse failure (notes not yet
+ * published, network error, page format change).
+ */
+export async function fetchLatestShowNotes(
+  show: keyof typeof SHOW_SLUGS,
+  episode?: number
+): Promise<FetchedShowNotes | null> {
+  const slug = SHOW_SLUGS[show];
+  if (!slug) throw new Error(`unknown show: ${show}`);
+
+  let episodeNumber: number;
+  let episodeDate: string;
+
+  if (episode !== undefined) {
+    episodeNumber = episode;
+    episodeDate = new Date().toISOString().slice(0, 10);
+  } else {
+    const listing = await fetch(`https://twit.tv/shows/${slug}`).then(r => r.text());
+    const parsed = parseEpisodeListing(listing);
+    if (!parsed) return null;
+    episodeNumber = parsed.number;
+    episodeDate = parsed.date;
+  }
+
+  const html = await fetch(`https://twit.tv/shows/${slug}/episodes/${episodeNumber}`).then(r => r.text());
+  const links = extractShowNotesLinks(html);
+  if (links.length === 0) return null;
+  return { show, episodeNumber, episodeDate, links };
+}
