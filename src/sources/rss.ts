@@ -9,7 +9,7 @@ const DEFAULT_AGGREGATOR_PATTERNS = [
   "Hacker News", "MetaFilter", "Pinboard", "Lobsters", "Slashdot", "Reddit",
 ];
 
-function decodeEntities(s: string): string {
+export function decodeEntities(s: string): string {
   return s
     .replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(Number(n)))
     .replace(/&#x([0-9a-f]+);/gi, (_, h) => String.fromCodePoint(parseInt(h, 16)))

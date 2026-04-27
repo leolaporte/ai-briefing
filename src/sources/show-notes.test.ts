@@ -25,3 +25,10 @@ test("extractShowNotesLinks returns absolute URLs only", () => {
 test("extractShowNotesLinks returns empty array if no Links section", () => {
   expect(extractShowNotesLinks("<html><body>no links here</body></html>")).toEqual([]);
 });
+
+test("extractShowNotesLinks decodes HTML entities in titles", () => {
+  const html = `<h3>Links</h3><a href="https://example.com/a">Tom &amp; Jerry: It&#8217;s back</a>`;
+  const links = extractShowNotesLinks(html);
+  expect(links).toHaveLength(1);
+  expect(links[0].title).toBe("Tom & Jerry: It’s back");
+});

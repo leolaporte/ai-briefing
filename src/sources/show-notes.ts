@@ -1,4 +1,5 @@
 import { canonicalizeUrl } from "../cluster";
+import { decodeEntities } from "./rss";
 
 export interface ShowNotesLink {
   url: string;
@@ -30,7 +31,7 @@ export function extractShowNotesLinks(html: string): ShowNotesLink[] {
     const canonical = canonicalizeUrl(href);
     if (seen.has(canonical)) continue;
     seen.add(canonical);
-    const titleHtml = m[2].replace(/<[^>]+>/g, "").trim();
+    const titleHtml = decodeEntities(m[2].replace(/<[^>]+>/g, "")).trim();
     out.push({ url: canonical, title: titleHtml || null });
   }
   return out;
