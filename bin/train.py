@@ -88,6 +88,34 @@ def train(args):
             recall_at_k = float(yh[picked].sum() / max(1, yh.sum())) if yh.sum() > 0 else 0.0
             summary["recall_at_40"] = round(recall_at_k, 3)
 
+            if args.eval_dir is not None:
+                args.eval_dir.mkdir(parents=True, exist_ok=True)
+                today = datetime.utcnow().date().isoformat()
+                report_path = args.eval_dir / f"{today}-{args.show}.md"
+
+                picked_set = set(int(i) for i in picked)
+                holdout_positives = [holdout_picks[i] for i in range(len(holdout_picks)) if yh[i] == 1]
+                shortlisted_positives = [
+                    holdout_picks[i] for i in range(len(holdout_picks))
+                    if yh[i] == 1 and i in picked_set
+                ]
+                missed = [p for p in holdout_positives if p not in shortlisted_positives]
+
+                lines = [
+                    f"# {args.show.upper()} classifier eval — episode {holdout_cutoff}",
+                    "",
+                    f"Trained on: {today}",
+                    "",
+                    f"recall_at_40: {recall_at_k:.3f}",
+                    f"holdout_positives: {int(yh.sum())}",
+                    "",
+                    "Missed:",
+                ]
+                for p in missed[:20]:
+                    lines.append(f"- {p['story_url']} — {p['story_title']}")
+                report_path.write_text("\n".join(lines) + "\n")
+                summary["eval_report"] = str(report_path)
+
     print(json.dumps(summary))
 
 def score(args):
@@ -119,6 +147,7 @@ def main():
     p.add_argument("--labels-db", type=Path, default=Path.home() / ".local/share/ai-briefing/labels.db")
     p.add_argument("--model-dir", type=Path, default=Path.home() / ".local/share/ai-briefing/models")
     p.add_argument("--no-eval", action="store_true")
+    p.add_argument("--eval-dir", type=Path, default=None)
     args = p.parse_args()
     if args.train:
         train(args)

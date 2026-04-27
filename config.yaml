@@ -40,5 +40,6 @@ output:
 classifier:
   enabled: true
   model_dir: "~/.local/share/ai-briefing/models"
+  eval_dir: "~/Obsidian/lgl/AI/News/eval"
   shortlist_size: 40
   fallback_recall_threshold: 0.80

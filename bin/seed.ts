@@ -35,6 +35,7 @@ async function main() {
         "--train", "--show", show,
         "--labels-db", config.storage.labels_db,
         "--model-dir", config.classifier.model_dir,
+        "--eval-dir", config.classifier.eval_dir,
       ], { encoding: "utf-8", stdio: ["ignore", "pipe", "inherit"] });
 
       if (train.status !== 0) {

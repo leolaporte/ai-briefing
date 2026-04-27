@@ -46,6 +46,7 @@ export interface OutputConfig { path: string; }
 export interface ClassifierConfig {
   enabled: boolean;
   model_dir: string;
+  eval_dir: string;
   shortlist_size: number;
   fallback_recall_threshold: number;
 }

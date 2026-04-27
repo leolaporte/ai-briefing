@@ -9,7 +9,7 @@ import { ingestArchives } from "./twitshow/ingest";
 import { canonicalizeUrl, clusterStories } from "./cluster";
 import { scoreCluster } from "./scorer";
 import { splitScored, type ScoredCluster } from "./selection";
-import { scoreClustersForShow, shortlistByScore } from "./classifier";
+import { scoreClustersForShow, shortlistByScore, expandHome } from "./classifier";
 import { writeBriefing } from "./writer";
 import { ensureBingBanner } from "./banner";
 import { createOrUpdateDailyNote } from "./daily-note";
@@ -123,15 +123,24 @@ async function main() {
     if (config.classifier.enabled) {
       const showsToFilter: Show[] = ["twit", "mbw", "im"];
       const shortlist = new Set<number>();
+      const evalDir = expandHome(config.classifier.eval_dir);
+      let allShowsFell = true;
       for (const show of showsToFilter) {
-        const scores = scoreClustersForShow(clusters, show, config.classifier);
-        for (const idx of shortlistByScore(scores, config.classifier.shortlist_size)) {
-          shortlist.add(idx);
+        const scores = scoreClustersForShow(clusters, show, config.classifier, evalDir);
+        if (scores === null) {
+          // Fallback: missing model or low recall — include all clusters for this show
+          for (let i = 0; i < clusters.length; i++) shortlist.add(i);
+        } else {
+          allShowsFell = false;
+          for (const idx of shortlistByScore(scores, config.classifier.shortlist_size)) {
+            shortlist.add(idx);
+          }
         }
       }
       toScore = [...shortlist].sort((a, b) => a - b);
       console.log(
-        `[tech-briefing] classifier shortlist: ${toScore.length}/${clusters.length} clusters (union of top-${config.classifier.shortlist_size} per show)`
+        `[tech-briefing] classifier shortlist: ${toScore.length}/${clusters.length} clusters` +
+        (allShowsFell ? " (all shows in fallback mode)" : "")
       );
     }
 
