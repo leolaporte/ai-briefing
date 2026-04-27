@@ -1,0 +1,14 @@
+[project]
+name = "ai-briefing-classifier"
+version = "0.1.0"
+description = "Per-show classifier for ai-briefing"
+requires-python = ">=3.11"
+dependencies = [
+  "sentence-transformers==3.4.1",
+  "scikit-learn==1.6.1",
+  "numpy==2.2.4",
+  "joblib==1.4.2",
+]
+
+[dependency-groups]
+dev = ["pytest==8.3.5"]
