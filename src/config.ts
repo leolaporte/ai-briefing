@@ -18,5 +18,6 @@ export function loadConfig(configPath?: string): Config {
   config.storage.labels_db = expandTilde(config.storage.labels_db);
   config.archive.root = expandTilde(config.archive.root);
   if (config.rss.opml_file) config.rss.opml_file = expandTilde(config.rss.opml_file);
+  if (config.classifier?.model_dir) config.classifier.model_dir = expandTilde(config.classifier.model_dir);
   return config;
 }

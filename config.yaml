@@ -36,3 +36,9 @@ archive:
 
 output:
   path: "~/Obsidian/lgl/AI/News"
+
+classifier:
+  enabled: true
+  model_dir: "~/.local/share/ai-briefing/models"
+  shortlist_size: 40
+  fallback_recall_threshold: 0.80

@@ -43,6 +43,13 @@ export interface ArchiveConfig { root: string; }
 
 export interface OutputConfig { path: string; }
 
+export interface ClassifierConfig {
+  enabled: boolean;
+  model_dir: string;
+  shortlist_size: number;
+  fallback_recall_threshold: number;
+}
+
 export interface Config {
   rss: RssConfig;
   claude: ClaudeConfig;
@@ -50,4 +57,5 @@ export interface Config {
   storage: StorageConfig;
   archive: ArchiveConfig;
   output: OutputConfig;
+  classifier: ClassifierConfig;
 }

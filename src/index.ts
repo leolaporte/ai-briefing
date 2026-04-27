@@ -4,10 +4,12 @@ import { loadConfig } from "./config";
 import { fetchRss } from "./sources/rss";
 import { ArchiveStore } from "./archive";
 import { LabelStore } from "./labels";
+import type { Show } from "./labels";
 import { ingestArchives } from "./twitshow/ingest";
 import { canonicalizeUrl, clusterStories } from "./cluster";
 import { scoreCluster } from "./scorer";
 import { splitScored, type ScoredCluster } from "./selection";
+import { scoreClustersForShow, shortlistByScore } from "./classifier";
 import { writeBriefing } from "./writer";
 import { ensureBingBanner } from "./banner";
 import { createOrUpdateDailyNote } from "./daily-note";
@@ -116,9 +118,27 @@ async function main() {
     const clusters = clusterStories(recent, config.pipeline.cluster_threshold);
     console.log(`[tech-briefing] ${clusters.length} topic clusters`);
 
-    // 5. Score each cluster via Claude Haiku
+    // 4b. Per-show classifier pre-filter
+    let toScore: number[] = clusters.map((_, i) => i);
+    if (config.classifier.enabled) {
+      const showsToFilter: Show[] = ["twit", "mbw", "im"];
+      const shortlist = new Set<number>();
+      for (const show of showsToFilter) {
+        const scores = scoreClustersForShow(clusters, show, config.classifier);
+        for (const idx of shortlistByScore(scores, config.classifier.shortlist_size)) {
+          shortlist.add(idx);
+        }
+      }
+      toScore = [...shortlist].sort((a, b) => a - b);
+      console.log(
+        `[tech-briefing] classifier shortlist: ${toScore.length}/${clusters.length} clusters (union of top-${config.classifier.shortlist_size} per show)`
+      );
+    }
+
+    // 5. Score each cluster via Claude Haiku (only the shortlist)
     const scored: ScoredCluster[] = [];
-    for (const cluster of clusters) {
+    for (const idx of toScore) {
+      const cluster = clusters[idx];
       const scoring = await scoreCluster(cluster, labels, {
         model: config.claude.model,
         max_tokens: config.claude.max_tokens,
@@ -126,7 +146,7 @@ async function main() {
       });
       if (scoring) scored.push({ cluster, scoring });
     }
-    console.log(`[tech-briefing] scored ${scored.length}/${clusters.length} clusters`);
+    console.log(`[tech-briefing] scored ${scored.length}/${toScore.length} clusters via Haiku`);
 
     // 6. Split into per-show buckets + other-notable
     const split = splitScored(scored, {
