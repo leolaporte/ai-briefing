@@ -5,7 +5,6 @@ import { fetchRss } from "./sources/rss";
 import { ArchiveStore } from "./archive";
 import { LabelStore } from "./labels";
 import type { Show } from "./labels";
-import { ingestArchives } from "./twitshow/ingest";
 import { canonicalizeUrl, clusterStories } from "./cluster";
 import { scoreCluster } from "./scorer";
 import { splitScored, type ScoredCluster } from "./selection";
@@ -72,16 +71,10 @@ async function main() {
   console.log("[tech-briefing] starting...");
   const config = loadConfig();
 
-  // 0. Refresh labels from local archive folders
   const labels = new LabelStore(config.storage.labels_db);
   const archive = new ArchiveStore(config.storage.archive_db);
   let outPath: string | undefined;
   try {
-    const ingest = await ingestArchives(config.archive.root, labels);
-    console.log(
-      `[tech-briefing] archive ingest: parsed=${ingest.files_parsed} skipped=${ingest.files_skipped} new_picks=${ingest.picks_inserted}`
-    );
-
     // 1. Fetch from OPML RSS feeds
     const rssStories = await fetchRss(config.rss).catch((err) => {
       console.error("[tech-briefing] rss failed:", err);
