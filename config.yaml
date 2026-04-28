@@ -29,11 +29,6 @@ storage:
   archive_db: "~/.local/share/ai-briefing/archive.db"
   labels_db: "~/.local/share/ai-briefing/labels.db"
 
-archive:
-  # Root directory containing archive-twit/ archive-mbw/ archive-im/ folders of
-  # final show rundowns (.html, .org, and -LINKS.csv files).
-  root: "~/Documents"
-
 output:
   path: "~/Obsidian/lgl/AI/News"
 

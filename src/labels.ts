@@ -38,25 +38,6 @@ export class LabelStore {
     this.db = openDb(path, [SCHEMA_002, SCHEMA_003]);
   }
 
-  insertPicks(picks: PickRow[]): void {
-    const stmt = this.db.prepare(`
-      INSERT OR IGNORE INTO picks
-        (show, episode_date, section_name, section_order, rank_in_section, story_url, story_title, scraped_at, source_file)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `);
-    const now = new Date().toISOString();
-    this.db.transaction(() => {
-      for (const p of picks) {
-        stmt.run(p.show, p.episode_date, p.section_name, p.section_order,
-          p.rank_in_section, p.story_url, p.story_title, now, p.source_file);
-      }
-    })();
-  }
-
-  countByShow(show: Show): number {
-    return (this.db.prepare("SELECT COUNT(*) AS c FROM picks WHERE show = ?").get(show) as { c: number }).c;
-  }
-
   getRecentPicks(show: Show, limit: number): PickRow[] {
     return this.db.prepare(`
       SELECT show, episode_date, section_name, section_order, rank_in_section, story_url, story_title, source_file,

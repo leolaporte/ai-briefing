@@ -10,8 +10,6 @@ describe("loadConfig", () => {
     expect(config.pipeline.top_n_per_show).toBe(15);
     expect(config.storage.archive_db).toContain(".local/share/ai-briefing/archive.db");
     expect(config.storage.labels_db).toContain(".local/share/ai-briefing/labels.db");
-    expect(config.archive.root).toContain("Documents");
-    expect(config.archive.root).not.toContain("~");
     expect(config.output.path).toContain("Obsidian");
     expect(config.output.path).not.toContain("~");
   });

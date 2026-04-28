@@ -39,32 +39,18 @@ describe("LabelStore", () => {
   beforeEach(() => { if (existsSync(TMP_DB)) unlinkSync(TMP_DB); });
   afterEach(() => { if (existsSync(TMP_DB)) unlinkSync(TMP_DB); });
 
-  test("insertPicks stores and dedupes within the same (show, episode_date, url)", () => {
-    const store = new LabelStore(TMP_DB);
-    store.insertPicks([
-      { show: "twit", episode_date: "2026-04-19", section_name: "AI", section_order: 1,
-        rank_in_section: 1, story_url: "https://example.com/a", story_title: "A",
-        source_file: "fixture.html", weight: 1.0, source: "archive" },
-      { show: "twit", episode_date: "2026-04-19", section_name: "AI", section_order: 1,
-        rank_in_section: 2, story_url: "https://example.com/a", story_title: "A (dup)",
-        source_file: "fixture.html", weight: 1.0, source: "archive" },
-    ]);
-    expect(store.countByShow("twit")).toBe(1);
-    store.close();
-  });
-
   test("getRecentPicks returns newest-first and respects show filter", () => {
     const store = new LabelStore(TMP_DB);
-    store.insertPicks([
-      { show: "twit", episode_date: "2026-04-12", section_name: "AI", section_order: 1,
-        rank_in_section: 1, story_url: "https://example.com/old", story_title: "Old",
-        source_file: null, weight: 1.0, source: "archive" },
-      { show: "twit", episode_date: "2026-04-19", section_name: "AI", section_order: 1,
-        rank_in_section: 1, story_url: "https://example.com/new", story_title: "New",
-        source_file: null, weight: 1.0, source: "archive" },
-      { show: "mbw", episode_date: "2026-04-14", section_name: "Apple", section_order: 1,
-        rank_in_section: 1, story_url: "https://example.com/mbw", story_title: "MBW",
-        source_file: null, weight: 1.0, source: "archive" },
+    store.insertLabeledPicks([
+      { show: "twit", episode_date: "2026-04-12",
+        story_url: "https://example.com/old", story_title: "Old",
+        source: "show_notes", weight: 1.0 },
+      { show: "twit", episode_date: "2026-04-19",
+        story_url: "https://example.com/new", story_title: "New",
+        source: "show_notes", weight: 1.0 },
+      { show: "mbw", episode_date: "2026-04-14",
+        story_url: "https://example.com/mbw", story_title: "MBW",
+        source: "show_notes", weight: 1.0 },
     ]);
     const recent = store.getRecentPicks("twit", 10);
     expect(recent.length).toBe(2);

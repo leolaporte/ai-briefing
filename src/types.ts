@@ -39,8 +39,6 @@ export interface StorageConfig {
   labels_db: string;
 }
 
-export interface ArchiveConfig { root: string; }
-
 export interface OutputConfig { path: string; }
 
 export interface ClassifierConfig {
@@ -56,7 +54,6 @@ export interface Config {
   claude: ClaudeConfig;
   pipeline: PipelineConfig;
   storage: StorageConfig;
-  archive: ArchiveConfig;
   output: OutputConfig;
   classifier: ClassifierConfig;
 }
