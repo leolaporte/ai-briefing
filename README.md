@@ -51,6 +51,32 @@ bun run src/bin/ingest-archive.ts
 bun test
 ```
 
+## Project board
+
+Work is tracked on the GitHub Projects v2 board:
+
+- Board: https://github.com/users/leolaporte/projects/1
+- Local convention doc: `docs/project-board.md`
+
+Jared treats that board as the mirror of reality. New durable work should be
+represented by an issue on the board before implementation starts. The board
+uses GitHub's built-in Status field (`Todo`, `In Progress`, `Done`) plus custom
+fields for `Priority` and `Work Stream`.
+
+Work streams:
+
+- `Ingestion` — RSS, OPML, archive, label import, and corpus growth.
+- `Scoring` — prompts, few-shot examples, Claude scoring, classifier work, and evaluation.
+- `Briefing Generation` — candidate selection, show-specific output, and markdown formatting.
+- `Delivery` — Obsidian publishing path, notifications, and downstream consumption.
+- `Operations` — systemd timers, retraining jobs, config, dependency hygiene, and reliability.
+
+Quick status check from the repo root:
+
+```bash
+jared summary
+```
+
 ## Tech stack
 
 - **Bun** + TypeScript
